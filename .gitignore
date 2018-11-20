@@ -1,0 +1,6 @@
+.*
+!.gitignore
+*~
+*.py[co]
+__pycache__
+htmlcov

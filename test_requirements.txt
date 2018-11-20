@@ -1,0 +1,7 @@
+coverage
+coveralls
+pip
+pytest-cov
+pytest-runner
+pytest
+mock
