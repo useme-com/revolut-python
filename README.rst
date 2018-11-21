@@ -6,8 +6,8 @@ Revolut API client for Python
 |travis|_ |coveralls|_
 
 
-.. |travis| image:: https://travis-ci.org/emesik/revolut-python.svg
-.. _travis: https://travis-ci.org/emesik/revolut-python
+.. |travis| image:: https://travis-ci.com/emesik/revolut-python.svg
+.. _travis: https://travis-ci.com/emesik/revolut-python
 
 
 .. |coveralls| image:: https://coveralls.io/repos/github/emesik/revolut-python/badge.svg
