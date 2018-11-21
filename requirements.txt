@@ -1,2 +1,2 @@
 python-dateutil
-requests
+requests>=2.0

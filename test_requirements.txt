@@ -4,4 +4,4 @@ pip
 pytest-cov
 pytest-runner
 pytest
-mock
+responses
