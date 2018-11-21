@@ -68,20 +68,22 @@ class Client(object):
     def accounts(self):
         if self._accounts is not None:
             return self._accounts
-        self._accounts = set()
+        self._accounts = {}
         data = self._get('accounts')
         for accdat in data:
-            self._accounts.add(Account(client=self, **accdat))
+            acc = Account(client=self, **accdat)
+            self._accounts[acc.id] = acc
         return self._accounts
 
     @property
     def counterparties(self):
         if self._counterparties is not None:
             return self._counterparties
-        self._counterparties = set()
+        self._counterparties = {}
         data = self._get('counterparties')
         for cptdat in data:
-            self._counterparties.add(Counterparty(client=self, **cptdat))
+            cpt = Counterparty(client=self, **cptdat)
+            self._counterparties[cpt.id] = cpt
         return self._counterparties
 
 

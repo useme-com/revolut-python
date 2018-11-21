@@ -44,7 +44,8 @@ class TestAll(TestCase):
         self.assertIs(accounts, cli.accounts)
         refresh_id = 'be8932d2-bf0d-4311-808f-fe9439d592df'
         refresh_acc = None
-        for acc in accounts:
+        for accid,acc in accounts.items():
+            self.assertEqual(accid, acc.id)
             self.assertIsInstance(acc, Account)
             self.assertIsInstance(acc.balance, Decimal)
             self.assertIsInstance(acc.created_at, datetime)
@@ -67,7 +68,8 @@ class TestAll(TestCase):
         counterparties = cli.counterparties
         self.assertEqual(2, len(counterparties))
         self.assertIs(counterparties, cli.counterparties)
-        for cpt in counterparties:
+        for cptid,cpt in counterparties.items():
+            self.assertEqual(cptid, cpt.id)
             self.assertIsInstance(cpt, Counterparty)
             self.assertIsInstance(cpt.created_at, datetime)
             self.assertIsInstance(cpt.updated_at, datetime)
