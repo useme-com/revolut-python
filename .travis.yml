@@ -1,0 +1,22 @@
+language: python
+dist: xenial # minimal version required for python 3.7 support
+python:
+  - "2.7"
+  - "3.6"
+matrix:
+  include:
+    - python: 3.7 # https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
+      sudo: true
+  allow_failures:
+    python: "nightly"
+
+cache: pip
+before_install:
+  - rm -rf dist && python setup.py sdist # prep package distribution
+install:
+  - pip install dist/*.tar.gz # install dependencies as specified in setup.py
+  - pip install -r test_requirements.txt
+script:
+  - pytest
+after_success:
+  - coveralls

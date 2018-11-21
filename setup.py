@@ -26,7 +26,7 @@ def find_version(*parts):
 version = find_version('revolut', '__init__.py')
 
 setup(
-    name = 'revolut',
+    name = 'revolut-python',
     version = version,
     description = 'Revolut API client for Python',
     url = 'https://github.com/emesik/revolut-python/',
