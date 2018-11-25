@@ -4,10 +4,6 @@ import json
 import os
 import responses
 from unittest import TestCase
-try:
-    from unittest.mock import patch, Mock
-except ImportError:
-    from mock import patch, Mock
 
 from revolut import (
     Client, Account,
@@ -64,6 +60,7 @@ class TestRevolut(TestCase):
                 refresh_acc = acc
         acc = refresh_acc.refresh()
         self.assertIsInstance(acc, Account)
+        self.assertEqual(repr(acc), '<Account {}>'.format(refresh_id))
         self.assertIsInstance(acc.balance, Decimal)
         self.assertIsInstance(acc.created_at, datetime)
         self.assertIsInstance(acc.updated_at, datetime)
@@ -109,6 +106,7 @@ class TestRevolut(TestCase):
             phone='+4412345678901')
         self.assertEqual(str(cpt), 'Id: NO ID personal Alice Tester +4412345678901')
         cpt.save()
+        self.assertEqual(repr(cpt), '<Counterparty {}>'.format(cpt_id))
         self.assertEqual(str(cpt), 'Id: 6aa7d45f-ea8a-42cf-b69a-c53848d1ffd1 personal Alice Tester +4412345678901')
         self.assertIsInstance(cpt.created_at, datetime)
         self.assertIsInstance(cpt.updated_at, datetime)
@@ -146,6 +144,7 @@ class TestRevolut(TestCase):
             email='test@sandboxcorp.com')
         self.assertEqual(str(cpt), 'Id: NO ID business  test@sandboxcorp.com')
         cpt.save()
+        self.assertEqual(repr(cpt), '<Counterparty {}>'.format(cpt_id))
         self.assertEqual(
             str(cpt),
             'Id: a630f150-4a22-42d7-82f2-74d9c5da7c35 business The sandbox corp test@sandboxcorp.com')
@@ -213,6 +212,7 @@ class TestRevolut(TestCase):
         self.assertEqual(1, len(txns))
         self.assertIsInstance(txns[0], Transaction)
         self.assertEqual(tx.id, txns[0].id)
+        self.assertEqual('<Transaction {}>'.format(tx.id), repr(txns[0]))
 
     @responses.activate
     def test_pay_to_revolut_with_conversion(self):
@@ -240,6 +240,7 @@ class TestRevolut(TestCase):
         self.assertEqual(1, len(txns))
         self.assertIsInstance(txns[0], Transaction)
         self.assertEqual(tx.id, txns[0].id)
+        self.assertEqual('<Transaction {}>'.format(tx.id), repr(txns[0]))
 
 class TestUtils(TestCase):
     def test_date(self):

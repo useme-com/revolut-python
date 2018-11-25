@@ -140,6 +140,9 @@ class Account(_UpdateFromKwargsMixin):
         self.updated_at = dateutil.parser.parse(self.updated_at)
         self.balance = Decimal(self.balance)
 
+    def __repr__(self):
+        return '<Account {}>'.format(self.id)
+
     def __str__(self):
         return 'Id: {}, {:.2f} {:3s}'.format(self.id, self.balance, self.currency)
 
@@ -209,6 +212,9 @@ class Counterparty(_UpdateFromKwargsMixin):
         self.client = kwargs.pop('client')
         self._update(**kwargs)
 
+    def __repr__(self):
+        return '<Counterparty {}>'.format(self.id)
+
     def __str__(self):
         return 'Id: {} {} {} {}'.format(
             self.id or 'NO ID',
@@ -262,6 +268,9 @@ class CounterpartyAccount(_UpdateFromKwargsMixin):
         self._check_type(kwargs.pop('type'))
         self._update(**kwargs)
 
+    def __repr__(self):
+        return '<CounterpartyAccount {}>'.format(self.id)
+
     def _check_type(self, typ):
         assert typ == 'revolut'
 
@@ -276,6 +285,9 @@ class CounterpartyExternalAccount(CounterpartyAccount):
     name = ''
     bank_country = ''
     recipient_charges = ''
+
+    def __repr__(self):
+        return '<CounterpartyExternalAccount {}>'.format(self.id)
 
     def _check_type(self, typ):
         assert typ == 'external'
@@ -296,6 +308,9 @@ class Transaction(_UpdateFromKwargsMixin):
     def __init__(self, **kwargs):
         self.client = kwargs.pop('client')
         self._update(**kwargs)
+
+    def __repr__(self):
+        return '<Transaction {}>'.format(self.id)
 
     def _update(self, **kwargs):
         super(Transaction, self)._update(**kwargs)
