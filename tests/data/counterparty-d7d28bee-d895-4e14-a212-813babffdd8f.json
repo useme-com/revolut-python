@@ -1,0 +1,13 @@
+{"accounts": [{"bank_country": "PL",
+               "bic": "BPKOPLPW",
+               "currency": "PLN",
+               "iban": "PL50102055581111148825600052",
+               "id": "4014dab3-5b65-445c-8664-7cff84ee1496",
+               "name": "Kogucik S.A.",
+               "recipient_charges": "no",
+               "type": "external"}],
+ "created_at": "2018-11-25T16:20:57.314Z",
+ "id": "d7d28bee-d895-4e14-a212-813babffdd8f",
+ "name": "Kogucik S.A.",
+ "state": "created",
+ "updated_at": "2018-11-25T16:20:57.314Z"}

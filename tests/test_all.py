@@ -7,7 +7,7 @@ from unittest import TestCase
 
 from revolut import (
     Client, Account,
-    Counterparty, CounterpartyAccount,
+    Counterparty, ExternalCounterparty, CounterpartyAccount,
     Transaction,
     exceptions, utils)
 
@@ -160,6 +160,52 @@ class TestRevolut(TestCase):
             profile_type='business',
             email='test@sandboxcorp.com')
         self.assertRaises(exceptions.CounterpartyAlreadyExists, cpt.save)
+
+    @responses.activate
+    def test_add_counterparty_external(self):
+        cpt_id = 'd7d28bee-d895-4e14-a212-813babffdd8f'
+        responses.add(responses.POST, 'https://sandbox-b2b.revolut.com/api/1.0/counterparty',
+            json=self._read('counterparty-{}.json'.format(cpt_id)), status=200)
+        responses.add(responses.GET, 'https://sandbox-b2b.revolut.com/api/1.0/counterparties',
+            json=self._read('counterparties.json'), status=200)
+        responses.add(responses.GET,
+            'https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}'.format(cpt_id),
+            json=self._read('counterparty-{}.json'.format(cpt_id)), status=200)
+        responses.add(responses.POST, 'https://sandbox-b2b.revolut.com/api/1.0/counterparty',
+            json={'message': 'This counterparty already exists'}, status=422)
+
+        cli = Client(self.key)
+        cpt = ExternalCounterparty(
+            client=cli,
+            company_name=u'Kogucik S.A.',
+            bank_country='PL',
+            currency='PLN',
+            phone='+48123456789',
+            email='michal@salaban.info',
+            address={
+                'street_line1': 'The Street Address Line 1',
+                'street_line2': 'The Street Address Line 2',
+                'region': 'The Region',
+                'city': 'The City',
+                'country': 'PL',
+                'postcode': '53-405',
+                },
+            iban='PL50102055581111148825600052',
+            bic='BPKOPLPW')
+        self.assertEqual(str(cpt), 'Id: NO ID Kogucik S.A.')
+        ncpt = cpt.save()
+        self.assertEqual(cpt.id, cpt_id)
+        self.assertIsInstance(ncpt, Counterparty)
+        self.assertEqual(repr(ncpt), '<Counterparty {}>'.format(cpt_id))
+        self.assertEqual(ncpt.profile_type, '')
+        self.assertEqual(
+            str(ncpt),
+            'Id: d7d28bee-d895-4e14-a212-813babffdd8f  Kogucik S.A.')
+        self.assertIsInstance(ncpt.created_at, datetime)
+        self.assertIsInstance(ncpt.updated_at, datetime)
+        for accid,acc in ncpt.accounts.items():
+            self.assertIsInstance(acc, CounterpartyAccount)
+            self.assertEqual(accid, acc.id)
 
     def test_add_counterparty_invalid(self):
         cli = Client(self.key)

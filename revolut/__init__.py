@@ -12,7 +12,7 @@ except ImportError:
     from urllib import urlencode
 from . import exceptions, utils
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 _log = logging.getLogger(__name__)
 
@@ -195,6 +195,7 @@ class Account(_UpdateFromKwargsMixin):
         data = self.client._post('transfer', reqdata)
         return self.client.transaction(data['id'])
 
+
 class Counterparty(_UpdateFromKwargsMixin):
     client = None
     id = None
@@ -220,7 +221,7 @@ class Counterparty(_UpdateFromKwargsMixin):
             self.id or 'NO ID',
             self.profile_type,
             self.name,
-            self.email if self.profile_type == 'business' else self.phone)
+            self.email if self.profile_type == 'business' else self.phone).strip()
 
     def _update(self, **kwargs):
         self.accounts = {}
@@ -258,6 +259,64 @@ class Counterparty(_UpdateFromKwargsMixin):
         self._update(**data)
         self.client._refresh_counterparties()
         return self
+
+
+class ExternalCounterparty(_UpdateFromKwargsMixin):
+    """Describes a non-Revolut counterparty. Objects of this class should be used only to
+    create such counterparties. The `.save()` method will return the resulting `Counterparty`
+    object and the original `ExternalCounterparty` should be discarded afterwards."""
+    id = None
+    client = None
+    email = ''
+    phone = ''
+    company_name = ''
+    individual_name = None
+    bank_country = ''
+    currency = None
+    phone = ''
+    address = None
+    iban = None
+    bic = None
+
+    def __init__(self, **kwargs):
+        self.client = kwargs.pop('client')
+        self._update(**kwargs)
+
+    def __repr__(self):
+        return '<ExternalCounterparty {}>'.format(self.iban or self.account_no)
+
+    def __str__(self):
+        return 'Id: {} {}'.format(
+            self.id or 'NO ID',
+            '{first_name} {last_name}'.format(**self.individual_name) \
+                if self.individual_name else self.company_name)
+
+    def save(self):
+        if self.id is not None:
+            raise exceptions.CounterpartyAlreadyExists(
+                'The object\'s ID is set. It has been saved already.')
+        if self.iban:
+            iban_ctry = self.iban[:2]
+            if iban_ctry.isalpha() and iban_ctry != self.bank_country:
+                raise ValueError('Bank country {} doesn\'t match the IBAN prefix {}'.format(
+                        self.bank_country, iban_ctry))
+        try:
+            keyset = ('email', 'phone', 'company_name', 'individual_name',
+                    'bank_country', 'currency', 'phone', 'address', 'iban', 'bic')
+            reqdata = {}
+            for k in keyset:
+                v = getattr(self, k, None)
+                if v:
+                    reqdata[k] = v
+            data = self.client._post('counterparty', data=reqdata)
+        except exceptions.RevolutHttpError as e:
+            if e.status_code == 422:
+                raise exceptions.CounterpartyAlreadyExists()
+            raise
+        self.id = data['id']
+        self.client._refresh_counterparties()
+        cpt = Counterparty(client=self.client, id=self.id)
+        return cpt.refresh()
 
 
 class CounterpartyAccount(_UpdateFromKwargsMixin):
