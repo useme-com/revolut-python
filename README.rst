@@ -12,7 +12,7 @@ Revolut API client for Python
 
 A Python wrapper for Revolut API, Python 2.x and 3.x compatible.
 
-Release 0.1, a hardcore alpha.
+Release 0.2, a hardcore alpha.
 
 What is supported?
 ------------------
