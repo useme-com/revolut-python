@@ -374,6 +374,16 @@ class Transaction(_UpdateFromKwargsMixin):
         self.client = kwargs.pop('client')
         self._update(**kwargs)
 
+    @property
+    def direction(self):
+        if len(self.legs) == 2:
+            return 'both'
+        else:
+            if self.legs[0]['amount'] < 0:
+                return 'out'
+            else:
+                return 'in'
+
     def __repr__(self):
         return '<Transaction {}>'.format(self.id)
 
