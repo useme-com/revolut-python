@@ -97,7 +97,7 @@ class Client(object):
         self._counterparties = self._cptbyaccount = None
         _ = self.counterparties
 
-    def transactions(self, counterparty=None, from_date=None, to_date=None):
+    def transactions(self, counterparty=None, from_date=None, to_date=None, txtype=None):
         transactions = []
         reqdata = {}
         if counterparty:
@@ -106,6 +106,12 @@ class Client(object):
             reqdata['from'] = utils._date(from_date).isoformat()
         if to_date:
             reqdata['to'] = utils._date(to_date).isoformat()
+        if txtype:
+            if txtype not in ('atm', 'card_payment', 'card_refund', 'card_chargeback',
+                'card_credit', 'exchange', 'transfer', 'loan', 'fee', 'refund', 'topup',
+                'topup_return', 'tax', 'tax_refund'):
+                raise ValueError('Invalid transaction type: {}'.format(txtype))
+            reqdata['type'] = txtype
         data = self._get('transactions', data=reqdata or None)
         for txdat in data:
             txn = Transaction(client=self, **txdat)
