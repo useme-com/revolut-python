@@ -83,6 +83,16 @@ class TestRevolut(TestCase):
                 self.assertIsInstance(acc, CounterpartyAccount)
                 self.assertEqual(accid, acc.id)
 
+        responses.add(
+            responses.DELETE,
+            'https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}'.format(cpt.id),
+            status=204)
+        cptid = cpt.id
+        cpt.delete()
+        self.assertIsNone(cpt.id)
+        self.assertRaises(ValueError, cpt.delete)
+        self.assertNotIn(cptid, cli.counterparties)
+
     @responses.activate
     def test_add_counterparty_personal(self):
         cpt_id = '6aa7d45f-ea8a-42cf-b69a-c53848d1ffd1'

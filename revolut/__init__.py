@@ -10,7 +10,7 @@ except ImportError:
     from urllib import urlencode
 from . import exceptions, utils
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 _log = logging.getLogger(__name__)
 
@@ -51,12 +51,16 @@ class Client(object):
         if data is not None:
             _log.debug('data: {}'.format(data))
         rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
-        result = rsp.json()
-        if rsp.status_code != 200:
+        if rsp.status_code == 204:
+            result = None
+        else:
+            result = rsp.json()
+        if rsp.status_code < 200 or rsp.status_code >= 300:
             raise exceptions.RevolutHttpError(rsp.status_code, 'HTTP {} for {}: {}'.format(
                     rsp.status_code, url, result.get('message', 'No message supplied')))
-        _ppresult = json.dumps(result, indent=2, sort_keys=True)
-        _log.debug(u'Result:\n{result}'.format(result=_ppresult))
+        if result:
+            _ppresult = json.dumps(result, indent=2, sort_keys=True)
+            _log.debug(u'Result:\n{result}'.format(result=_ppresult))
         return result
 
     def _get(self, path, data=None):
@@ -65,6 +69,9 @@ class Client(object):
 
     def _post(self, path, data=None):
         return self._request(requests.post, path, data or {})
+
+    def _delete(self, path, data=None):
+        return self._request(requests.delete, path, data or {})
 
     @property
     def accounts(self):
@@ -263,6 +270,13 @@ class Counterparty(_UpdateFromKwargsMixin):
         self._update(**data)
         self.client._refresh_counterparties()
         return self
+
+    def delete(self):
+        if not self.id:
+            raise ValueError('{} doesn\'t have an ID. Cannot delete.'.format(self))
+        self.client._delete('counterparty/{}'.format(self.id))
+        del self.client._counterparties[self.id]
+        self.id = None
 
 
 class ExternalCounterparty(_UpdateFromKwargsMixin):
