@@ -1,9 +1,7 @@
-import collections
 import dateutil.parser
 from decimal import Decimal
 import json
 import logging
-import pprint
 import requests
 try:
     from urllib.parse import urljoin, urlencode     # 3.x
@@ -57,7 +55,7 @@ class Client(object):
         if rsp.status_code != 200:
             raise exceptions.RevolutHttpError(rsp.status_code, 'HTTP {} for {}: {}'.format(
                     rsp.status_code, url, result.get('message', 'No message supplied')))
-        _ppresult = pprint.pformat(result)
+        _ppresult = json.dumps(result, indent=2, sort_keys=True)
         _log.debug(u'Result:\n{result}'.format(result=_ppresult))
         return result
 
