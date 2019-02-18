@@ -375,6 +375,7 @@ class Transaction(_UpdateFromKwargsMixin):
     client = None
     type = ''
     state = ''
+    reason_code = ''
     created_at = None
     completed_at = None
     updated_at = None
