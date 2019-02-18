@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import dateutil.parser
 from decimal import Decimal
 import json
@@ -60,7 +62,7 @@ class Client(object):
                     rsp.status_code, url, result.get('message', 'No message supplied')))
         if result:
             _ppresult = json.dumps(result, indent=2, sort_keys=True)
-            _log.debug(u'Result:\n{result}'.format(result=_ppresult))
+            _log.debug('Result:\n{result}'.format(result=_ppresult))
         return result
 
     def _get(self, path, data=None):
