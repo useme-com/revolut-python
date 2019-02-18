@@ -12,7 +12,7 @@ except ImportError:
     from urllib import urlencode
 from . import exceptions, utils
 
-__version__ = '0.4'
+__version__ = '0.5'
 
 _log = logging.getLogger(__name__)
 
