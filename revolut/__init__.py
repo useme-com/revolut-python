@@ -58,8 +58,16 @@ class Client(object):
         else:
             result = rsp.json()
         if rsp.status_code < 200 or rsp.status_code >= 300:
-            raise exceptions.RevolutHttpError(rsp.status_code, 'HTTP {} for {}: {}'.format(
-                    rsp.status_code, url, result.get('message', 'No message supplied')))
+            message = result.get('message', 'No message supplied')
+            _log.error('HTTP {} for {}: {}'.format(rsp.status_code, url, message))
+            if rsp.status_code == 422:
+                if 'nsufficient balance' in message:
+                    raise exceptions.InsufficientBalance(message)
+                elif 'ddress is required' in message:
+                    raise exceptions.CounterpartyAddressRequired(message)
+                elif 'ounterparty already exists' in message:
+                    raise exceptions.CounterpartyAlreadyExists(message)
+            raise exceptions.RevolutHttpError(rsp.status_code, message)
         if result:
             _ppresult = json.dumps(result, indent=2, sort_keys=True)
             _log.debug('Result:\n{result}'.format(result=_ppresult))
@@ -320,19 +328,14 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
             if iban_ctry.isalpha() and iban_ctry != self.bank_country:
                 raise ValueError('Bank country {} doesn\'t match the IBAN prefix {}'.format(
                         self.bank_country, iban_ctry))
-        try:
-            keyset = ('email', 'phone', 'company_name', 'individual_name',
-                    'bank_country', 'currency', 'phone', 'address', 'iban', 'bic')
-            reqdata = {}
-            for k in keyset:
-                v = getattr(self, k, None)
-                if v:
-                    reqdata[k] = v
-            data = self.client._post('counterparty', data=reqdata)
-        except exceptions.RevolutHttpError as e:
-            if e.status_code == 422:
-                raise exceptions.CounterpartyAlreadyExists()
-            raise
+        keyset = ('email', 'phone', 'company_name', 'individual_name',
+                'bank_country', 'currency', 'phone', 'address', 'iban', 'bic')
+        reqdata = {}
+        for k in keyset:
+            v = getattr(self, k, None)
+            if v:
+                reqdata[k] = v
+        data = self.client._post('counterparty', data=reqdata)
         self.id = data['id']
         self.client._refresh_counterparties()
         cpt = Counterparty(client=self.client, id=self.id)

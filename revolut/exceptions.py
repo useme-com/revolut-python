@@ -8,3 +8,9 @@ class RevolutHttpError(RevolutError):
 
 class CounterpartyAlreadyExists(RevolutError):
     pass
+
+class CounterpartyAddressRequired(RevolutError):
+    pass
+
+class InsufficientBalance(RevolutError):
+    pass
