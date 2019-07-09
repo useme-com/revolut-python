@@ -51,7 +51,7 @@ class Client(object):
         hdr = {'Authorization': 'Bearer {}'.format(self.key)}
         _log.debug('{}'.format(path))
         if data is not None:
-            _log.debug('data: {}'.format(data))
+            _log.debug('data: {}'.format(json.dumps(data, indent=2, sort_keys=True)))
         rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
         if rsp.status_code == 204:
             result = None
