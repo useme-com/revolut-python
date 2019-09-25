@@ -6,6 +6,9 @@ class RevolutHttpError(RevolutError):
         self.status_code = status_code
         super(RevolutHttpError, self).__init__(message)
 
+class Unauthorized(RevolutHttpError):
+    pass
+
 class CounterpartyAlreadyExists(RevolutError):
     pass
 

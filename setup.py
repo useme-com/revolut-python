@@ -53,4 +53,5 @@ setup(
     ],
     keywords = 'revolut payments',
     test_suite='tests',
+    scripts=['tools/revolut_genkey.sh', 'tools/revolut_getjwt.py', 'tools/revolut_gettokens.py']
 )

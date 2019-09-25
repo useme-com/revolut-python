@@ -5,50 +5,32 @@ from decimal import Decimal
 import json
 import logging
 import requests
-try:
+try: # pragma: nocover
     from urllib.parse import urljoin, urlencode     # 3.x
-except ImportError:
+except ImportError: # pragma: nocover
     from urlparse import urljoin                    # 2.x
     from urllib import urlencode
 from . import exceptions, utils
 
-__version__ = '0.5'
+__version__ = '0.6'
 
 _log = logging.getLogger(__name__)
 
 
-class _UpdateFromKwargsMixin(object):
-    def _update(self, **kwargs):
-        for k,v in kwargs.items():
-            if not hasattr(self, k):
-                raise ValueError('Excess keyword for {}: {} = {}'.format(type(self), k,v))
-            setattr(self, k, v)
-
-
-class Client(object):
-    key = None
+class Client(utils._SetEnv):
     live = False
+    _session = None
     _accounts = None
     _counterparties = None
     _cptbyaccount = None
 
-    def __init__(self, key=None):
-        self.key = key or self.key
-        if not key:
-            raise ValueError('No access key given.')
-        if key.startswith('prod'):
-            self.base_url = 'https://b2b.revolut.com/api/1.0/'
-            self.live = True
-        elif key.startswith('sand'):
-            self.base_url = 'https://sandbox-b2b.revolut.com/api/1.0/'
-            self.live = False
-        else:
-            raise ValueError(
-                'The given key doesn\'t seem to match either production or sandbox environment.')
+    def __init__(self, session):
+        self._set_env(session.access_token)
+        self._session = session
 
     def _request(self, func, path, data=None):
         url = urljoin(self.base_url, path)
-        hdr = {'Authorization': 'Bearer {}'.format(self.key)}
+        hdr = {'Authorization': 'Bearer {}'.format(self._session.access_token)}
         _log.debug('{}'.format(path))
         if data is not None:
             _log.debug('data: {}'.format(json.dumps(data, indent=2, sort_keys=True)))
@@ -60,6 +42,8 @@ class Client(object):
         if rsp.status_code < 200 or rsp.status_code >= 300:
             message = result.get('message', 'No message supplied')
             _log.error('HTTP {} for {}: {}'.format(rsp.status_code, url, message))
+            if rsp.status_code == 401:
+                raise exceptions.Unauthorized(rsp.status_code, message)
             if rsp.status_code == 422:
                 if 'nsufficient balance' in message:
                     raise exceptions.InsufficientBalance(message)
@@ -138,6 +122,14 @@ class Client(object):
         return Transaction(client=self, **data)
 
     # TODO: def transaction_by_request_id(self, request_id):
+
+
+class _UpdateFromKwargsMixin(object):
+    def _update(self, **kwargs):
+        for k,v in kwargs.items():
+            if not hasattr(self, k):
+                raise ValueError('Excess keyword for {}: {} = {}'.format(type(self), k,v))
+            setattr(self, k, v)
 
 
 class Account(_UpdateFromKwargsMixin):

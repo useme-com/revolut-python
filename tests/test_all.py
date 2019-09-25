@@ -10,30 +10,32 @@ from revolut import (
     Counterparty, ExternalCounterparty, CounterpartyAccount,
     Transaction,
     exceptions, utils)
+from revolut.session import TemporarySession
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 
 class TestRevolut(TestCase):
-    key = 'sand_mx4sDGo356ZndtVsOq16SBrilRuQc8DkSIS84ioMlfx'
+    access_token = "oa_sand_lI35rv-tpvl0qsKa5OJGW5yiiXtKg7uZYB6b0jmLSCk"
 
     def _read(self, name):
         with open(os.path.join(DATA_DIR, name), 'r') as fh:
             return json.loads(fh.read())
 
     def test_key(self):
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         self.assertFalse(cli.live)
-        cli = Client('prod_mx4sDGo356ZndtVsOq16SBrilRuQc8DkSIS84ioMlfx')
+        pssn = TemporarySession('oa_prod_mx4sDGo356ZndtVsOq16SBrilRuQc8DkSIS84ioMlfx')
+        cli = Client(pssn)
         self.assertTrue(cli.live)
-        self.assertRaises(ValueError, Client, 'whatever')
-        self.assertRaises(ValueError, Client)
 
     @responses.activate
     def test_404(self):
         responses.add(responses.GET, 'https://sandbox-b2b.revolut.com/api/1.0/whatever',
             json={'message': 'The requested resource not found'}, status=404)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         self.assertRaises(exceptions.RevolutHttpError, cli._get, 'whatever')
 
     @responses.activate
@@ -45,7 +47,8 @@ class TestRevolut(TestCase):
             'https://sandbox-b2b.revolut.com/api/1.0/accounts/{}'.format(refresh_id),
             json=self._read('account-{}.json'.format(refresh_id)), status=200)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         accounts = cli.accounts
         self.assertEqual(6, len(accounts))
         self.assertIs(accounts, cli.accounts)
@@ -70,7 +73,8 @@ class TestRevolut(TestCase):
         responses.add(responses.GET, 'https://sandbox-b2b.revolut.com/api/1.0/counterparties',
             json=self._read('counterparties.json'), status=200)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         counterparties = cli.counterparties
         self.assertEqual(2, len(counterparties))
         self.assertIs(counterparties, cli.counterparties)
@@ -108,7 +112,8 @@ class TestRevolut(TestCase):
         responses.add(responses.POST, 'https://sandbox-b2b.revolut.com/api/1.0/counterparty',
             json={'message': 'This counterparty already exists'}, status=422)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         cpt = Counterparty(
             client=cli,
             profile_type='personal',
@@ -147,7 +152,8 @@ class TestRevolut(TestCase):
         responses.add(responses.POST, 'https://sandbox-b2b.revolut.com/api/1.0/counterparty',
             json={'message': 'This counterparty already exists'}, status=422)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         cpt = Counterparty(
             client=cli,
             profile_type='business',
@@ -184,7 +190,8 @@ class TestRevolut(TestCase):
         responses.add(responses.POST, 'https://sandbox-b2b.revolut.com/api/1.0/counterparty',
             json={'message': 'This counterparty already exists'}, status=422)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         cpt = ExternalCounterparty(
             client=cli,
             company_name=u'Kogucik S.A.',
@@ -218,7 +225,8 @@ class TestRevolut(TestCase):
             self.assertEqual(accid, acc.id)
 
     def test_add_counterparty_invalid(self):
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         cpt = Counterparty(client=cli, profile_type='whatever')
         self.assertRaises(ValueError, cpt.save)
 
@@ -235,7 +243,8 @@ class TestRevolut(TestCase):
             'https://sandbox-b2b.revolut.com/api/1.0/transaction/{}'.format(tx_id),
             json=self._read('transaction-{}.json'.format(tx_id)), status=200)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         tx = cli.accounts['be8932d2-bf0d-4311-808f-fe9439d592df'].send(
                 'c4ff8afa-54bb-4b2e-acb7-d0a95fb3b996',
                 100, 'GBP',
@@ -258,7 +267,8 @@ class TestRevolut(TestCase):
             'https://sandbox-b2b.revolut.com/api/1.0/transactions',
             json=[self._read('transaction-{}.json'.format(tx_id))], status=200)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         tx = cli.accounts['be8932d2-bf0d-4311-808f-fe9439d592df'].send(
                 '2d689cbd-1dc5-4e1b-a1bb-bc2b17c75a6c',
                 1, 'GBP',
@@ -286,7 +296,8 @@ class TestRevolut(TestCase):
             'https://sandbox-b2b.revolut.com/api/1.0/transactions',
             json=[self._read('transaction-{}.json'.format(tx_id))], status=200)
 
-        cli = Client(self.key)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
         tx = cli.accounts['be8932d2-bf0d-4311-808f-fe9439d592df'].send(
                 'ed50b331-5b2c-42e4-afbe-0e883bc12e60',
                 100, 'EUR',
