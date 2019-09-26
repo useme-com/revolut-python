@@ -8,4 +8,4 @@ if len(sys.argv) < 4:
     sys.exit(1)
 
 prvkey = open(sys.argv[1], "rb").read()
-print(get_jwt(prvkey, *sys.argv[2:]))
+print(get_jwt(prvkey, *sys.argv[2:]).decode())

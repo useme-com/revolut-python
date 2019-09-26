@@ -37,7 +37,11 @@ class TemporarySession(BaseSession):
 
 class RenewableSession(BaseSession):
     """Maintains long-term session, allowing to refresh the access tokens.
+
+    You may provide it with existing `access_token`. If missing, it will obtain a new one.
     """
+    refresh_token = None
+
     def __init__(self, refresh_token, client_id, jwt, access_token=None):
         self._access_token = access_token or self._access_token
         self._set_env(refresh_token)
