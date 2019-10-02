@@ -10,16 +10,43 @@ from revolut import (
     Counterparty, ExternalCounterparty, CounterpartyAccount,
     Transaction,
     exceptions, utils)
-from revolut.session import TemporarySession
+from revolut.session import TemporarySession, RenewableSession, TokenProvider
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 
-class TestRevolut(TestCase):
-    access_token = "oa_sand_lI35rv-tpvl0qsKa5OJGW5yiiXtKg7uZYB6b0jmLSCk"
-
+class JSONResponsesMixin(object):
     def _read(self, name):
         with open(os.path.join(DATA_DIR, name), 'r') as fh:
             return json.loads(fh.read())
+
+
+class TestTokens(TestCase, JSONResponsesMixin):
+    client_id = "rmPBoIc-LR3ObABUn-NKHq6WyEoCr6Lh__DFohuMRVM"
+    auth_code = "oa_prod_gg-_wDV66wYfKKpnF4RIrpOZs2oPTwNp4TXOra5pS0g"
+    jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9l"\
+           "IiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    refresh_token = "oa_prod_gg-_wDV66wYfKKpnF4RIrpOZs2oPTwNp4TXOra5pS0g"
+    request_url = 'https://b2b.revolut.com/api/1.0/auth/token'
+
+    @responses.activate
+    def test_get_tokens_by_auth_code(self):
+        responses.add(responses.POST, self.request_url,
+                json=self._read('token-authorization_code.json'), status=200)
+        tpr = TokenProvider(self.auth_code, self.client_id, self.jwt)
+        self.assertIn("grant_type=authorization_code", responses.calls[0].request.body)
+        self.assertIsNotNone(tpr.access_token)
+        self.assertIsNotNone(tpr.refresh_token)
+
+    @responses.activate
+    def test_refresh_token_via_renewable_session(self):
+        responses.add(responses.POST, self.request_url,
+                json=self._read('token-refresh_token.json'), status=200)
+        sess = RenewableSession(self.refresh_token, self.client_id, self.jwt)
+        self.assertIsNotNone(sess.access_token)
+        self.assertIn("grant_type=refresh_token", responses.calls[0].request.body)
+
+class TestRevolut(TestCase, JSONResponsesMixin):
+    access_token = "oa_sand_lI35rv-tpvl0qsKa5OJGW5yiiXtKg7uZYB6b0jmLSCk"
 
     def test_key(self):
         tssn = TemporarySession(self.access_token)
