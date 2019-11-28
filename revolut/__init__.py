@@ -336,6 +336,7 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
 
 class CounterpartyAccount(_UpdateFromKwargsMixin):
     id = None
+    name = ''
     currency = ''
 
     def __init__(self, **kwargs):
@@ -356,7 +357,6 @@ class CounterpartyExternalAccount(CounterpartyAccount):
     routing_number = ''
     bic = ''
     email = ''
-    name = ''
     bank_country = ''
     recipient_charges = ''
 
