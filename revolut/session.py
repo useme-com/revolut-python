@@ -81,7 +81,10 @@ class RenewableSession(BaseSession):
         _log.debug('{:s} result: {}'.format(
             type(self).__name__, json.dumps(result, indent=2, sort_keys=True)))
         if rsp.status_code != 200:
-            raise exceptions.RevolutHttpError(rsp.status_code, result.get('error'))
+            message = result.get("error") or ""
+            if "error_description" in result:
+                message += ": {:s}".format(result["error_description"])
+            raise exceptions.RevolutHttpError(rsp.status_code, message)
         self._access_token = result['access_token']
         self.access_token_expires = now + timedelta(seconds=result['expires_in'])
         self.refresh_token = result.get('refresh_token', self.refresh_token)
