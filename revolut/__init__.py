@@ -431,6 +431,8 @@ class Transaction(_UpdateFromKwargsMixin):
     legs = None
     request_id = None
     reference = None
+    merchant = None
+    card = None
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
