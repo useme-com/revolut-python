@@ -1,5 +1,7 @@
 import datetime
 import dateutil.parser
+from decimal import Decimal
+import json
 import jwt
 import sys
 
@@ -40,6 +42,13 @@ class _SetEnv(object):
                     token
                 )
             )
+
+
+class JSONWithDecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return str(Decimal)
+        return super(JSONWithDecimalEncoder, self).default(o)
 
 
 def get_jwt(prvkey, issuer, client_id):

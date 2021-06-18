@@ -39,7 +39,7 @@ class Client(utils._SetEnv):
         if rsp.status_code == 204:
             result = None
         else:
-            result = rsp.json()
+            result = rsp.json(parse_float=Decimal)
         if rsp.status_code < 200 or rsp.status_code >= 300:
             message = result.get("message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
@@ -54,7 +54,7 @@ class Client(utils._SetEnv):
                     raise exceptions.CounterpartyAlreadyExists(message)
             raise exceptions.RevolutHttpError(rsp.status_code, message)
         if result:
-            _ppresult = json.dumps(result, indent=2, sort_keys=True)
+            _ppresult = json.dumps(result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True)
             _log.debug("Result:\n{result}".format(result=_ppresult))
         return result
 
@@ -437,6 +437,10 @@ class Transaction(_UpdateFromKwargsMixin):
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
         self._update(**kwargs)
+        self.legs = self.legs or []
+        for leg in self.legs:
+            if "amount" in leg and not isinstance(leg["amount"], Decimal):
+                leg["amount"] = Decimal(leg["amount"])
 
     @property
     def direction(self):

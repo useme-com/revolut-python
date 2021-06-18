@@ -385,6 +385,8 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             "req-{}".format(datetime.now().isoformat()),
             reference="Transfer between own accounts",
         )
+        self.assertIsInstance(tx.legs[0]["amount"], Decimal)
+        self.assertIsInstance(tx.legs[1]["amount"], Decimal)
 
     @responses.activate
     def test_pay_to_revolut(self):
@@ -429,6 +431,8 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             "req-{}".format(datetime.now().isoformat()),
             reference="A test payment of 1 GBP",
         )
+        self.assertIsInstance(tx.legs[0]["amount"], Decimal)
+
         txns = cli.transactions(counterparty="2d689cbd-1dc5-4e1b-a1bb-bc2b17c75a6c")
         self.assertEqual(1, len(txns))
         self.assertIsInstance(txns[0], Transaction)
@@ -478,6 +482,8 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             "req-{}".format(datetime.now().isoformat()),
             reference="EUR from GBP",
         )
+        self.assertIsInstance(tx.legs[0]["amount"], Decimal)
+
         txns = cli.transactions(counterparty="ed50b331-5b2c-42e4-afbe-0e883bc12e60")
         self.assertEqual(1, len(txns))
         self.assertIsInstance(txns[0], Transaction)
