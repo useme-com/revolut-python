@@ -54,7 +54,9 @@ class Client(utils._SetEnv):
                     raise exceptions.CounterpartyAlreadyExists(message)
             raise exceptions.RevolutHttpError(rsp.status_code, message)
         if result:
-            _ppresult = json.dumps(result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True)
+            _ppresult = json.dumps(
+                result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
+            )
             _log.debug("Result:\n{result}".format(result=_ppresult))
         return result
 
@@ -189,23 +191,32 @@ class Account(_UpdateFromKwargsMixin):
         amount = Decimal(amount)
         if not isinstance(request_id, utils._str_types) or len(request_id) > 40:
             raise ValueError("request_id must be a string of max. 40 chars")
-        destid = utils._obj2id(dest)
+        destid = str(utils._obj2id(dest))
         if (
             destid in self.client.accounts
             and currency == self.currency == self.client.accounts[destid].currency
         ):
             return self._transfer_internal(destid, amount, request_id, reference)
+        _ = self.client.counterparties  # NOTE: make sure counterparties are loaded
+        cpt = None
         try:
-            _ = self.client.counterparties  # NOTE: make sure counterparties are loaded
             cpt = self.client._cptbyaccount[destid]
+            if cpt.accounts[destid].currency != currency:
+                raise ValueError(
+                    "Currency {} does not match the destination currency: {}".format(
+                        currency, cpt.accounts[destid].currency
+                    )
+                )
         except KeyError:
+            pass
+        if not cpt:
+            try:
+                cpt = self.client.counterparties[destid]
+            except KeyError:
+                pass
             raise ValueError(
-                "Account id {} not found among counterparties.".format(destid)
-            )
-        if cpt.accounts[destid].currency != currency:
-            raise ValueError(
-                "Currency {} does not match the destination currency: {}".format(
-                    currency, cpt.accounts[destid].currency
+                "Cannot find {:s} either among counterparties, their accounts or our own accounts".format(
+                    destid
                 )
             )
         reqdata = {
