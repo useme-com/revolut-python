@@ -47,7 +47,7 @@ class _SetEnv(object):
 class JSONWithDecimalEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, Decimal):
-            return str(Decimal)
+            return str(o)
         return super(JSONWithDecimalEncoder, self).default(o)
 
 

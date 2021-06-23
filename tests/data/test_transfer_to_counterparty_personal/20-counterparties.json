@@ -1,0 +1,50 @@
+[
+  {
+    "country": "GB",
+    "created_at": "2021-06-21T15:55:48.499506Z",
+    "id": "0ff7abd1-ee59-431c-aed1-3d6d419b434d",
+    "name": "Foo Bar",
+    "phone": "+4412345678907",
+    "profile_type": "personal",
+    "state": "created",
+    "updated_at": "2021-06-21T15:55:48.499506Z"
+  },
+  {
+    "accounts": [
+      {
+        "bank_country": "DE",
+        "bic": "BARCDE22",
+        "currency": "EUR",
+        "iban": "DE89370400440532013000",
+        "id": "766b9814-4f87-48c6-8c9a-dbcc1b3f05c5",
+        "name": "Acme Corp.",
+        "recipient_charges": "no",
+        "type": "external"
+      }
+    ],
+    "created_at": "2019-09-25T08:33:03.180991Z",
+    "id": "d1835e75-9906-4b30-b8da-c3a1c7949e3a",
+    "name": "Acme Corp.",
+    "state": "created",
+    "updated_at": "2019-09-25T08:33:03.180991Z"
+  },
+  {
+    "country": "GB",
+    "created_at": "2019-09-25T08:33:03.180227Z",
+    "id": "6ebcc076-7d65-4be4-b98e-48087cae2d70",
+    "name": "Rory Pearson",
+    "phone": "+441234454923",
+    "profile_type": "personal",
+    "state": "created",
+    "updated_at": "2019-09-25T08:33:03.180227Z"
+  },
+  {
+    "country": "GB",
+    "created_at": "2019-09-25T08:33:03.180183Z",
+    "id": "cf78fa55-99c1-4d7b-a44e-48ddc24a7876",
+    "name": "Taxalab Ltd.",
+    "profile_type": "business",
+    "state": "created",
+    "updated_at": "2019-09-25T08:33:03.180183Z"
+  }
+]

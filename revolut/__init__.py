@@ -34,7 +34,7 @@ class Client(utils._SetEnv):
         hdr = {"Authorization": "Bearer {}".format(self._session.access_token)}
         _log.debug("{}".format(path))
         if data is not None:
-            _log.debug("data: {}".format(json.dumps(data, indent=2, sort_keys=True)))
+            _log.debug("data: {}".format(json.dumps(data, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True)))
         rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
         if rsp.status_code == 204:
             result = None
@@ -43,6 +43,9 @@ class Client(utils._SetEnv):
         if rsp.status_code < 200 or rsp.status_code >= 300:
             message = result.get("message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
+            if rsp.status_code == 400:
+                if "o pocket found" in message:
+                    raise exceptions.NoPocketFound(message)
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
             if rsp.status_code == 422:
@@ -207,24 +210,25 @@ class Account(_UpdateFromKwargsMixin):
                         currency, cpt.accounts[destid].currency
                     )
                 )
+            receiver = {"account_id": destid, "counterparty_id": cpt.id}
         except KeyError:
             pass
         if not cpt:
             try:
                 cpt = self.client.counterparties[destid]
             except KeyError:
-                pass
-            raise ValueError(
-                "Cannot find {:s} either among counterparties, their accounts or our own accounts".format(
-                    destid
+                raise ValueError(
+                    "Cannot find {:s} either among counterparties, their accounts or our own accounts".format(
+                        destid
+                    )
                 )
-            )
+            receiver = {"counterparty_id": cpt.id}
         reqdata = {
             "request_id": request_id,
             "account_id": self.id,
-            "receiver": {"account_id": destid, "counterparty_id": cpt.id},
             "amount": "{:.2f}".format(amount),
             "currency": currency,
+            "receiver": receiver,
         }
         if reference is not None:
             reqdata["reference"] = reference

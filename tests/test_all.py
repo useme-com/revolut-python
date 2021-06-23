@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from decimal import Decimal
+import inspect
 import json
 import os
 import responses
@@ -22,7 +23,8 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
 class JSONResponsesMixin(object):
     def _read(self, name):
-        with open(os.path.join(DATA_DIR, name), "r") as fh:
+        caller_name = inspect.getouterframes(inspect.currentframe(), 2)[1][3]
+        with open(os.path.join(DATA_DIR, caller_name, name), "r") as fh:
             return json.loads(fh.read())
 
 
@@ -92,13 +94,13 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/accounts",
-            json=self._read("accounts.json"),
+            json=self._read("10-accounts.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/accounts/{}".format(refresh_id),
-            json=self._read("account-{}.json".format(refresh_id)),
+            json=self._read("20-account-{}.json".format(refresh_id)),
             status=200,
         )
 
@@ -128,7 +130,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("10-counterparties.json"),
             status=200,
         )
 
@@ -163,19 +165,19 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.POST,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparty",
-            json=self._read("counterparty-{}.json".format(cpt_id)),
+            json=self._read("10-counterparty-{}.json".format(cpt_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("20-counterparties.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(cpt_id),
-            json=self._read("counterparty-{}.json".format(cpt_id)),
+            json=self._read("30-counterparty-{}.json".format(cpt_id)),
             status=200,
         )
         responses.add(
@@ -227,19 +229,19 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.POST,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparty",
-            json=self._read("counterparty-{}.json".format(cpt_id)),
+            json=self._read("10-counterparty-{}.json".format(cpt_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("20-counterparties.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(cpt_id),
-            json=self._read("counterparty-{}.json".format(cpt_id)),
+            json=self._read("30-counterparty-{}.json".format(cpt_id)),
             status=200,
         )
         responses.add(
@@ -285,19 +287,19 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.POST,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparty",
-            json=self._read("counterparty-{}.json".format(cpt_id)),
+            json=self._read("10-counterparty-{}.json".format(cpt_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("20-counterparties.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(cpt_id),
-            json=self._read("counterparty-{}.json".format(cpt_id)),
+            json=self._read("30-counterparty-{}.json".format(cpt_id)),
             status=200,
         )
         responses.add(
@@ -354,25 +356,25 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/accounts",
-            json=self._read("accounts.json"),
+            json=self._read("10-accounts.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("20-counterparties.json"),
             status=200,
         )
         responses.add(
             responses.POST,
             "https://sandbox-b2b.revolut.com/api/1.0/transfer",
-            json=self._read("transfer-{}.json".format(tx_id)),
+            json=self._read("30-transfer-{}.json".format(tx_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/transaction/{}".format(tx_id),
-            json=self._read("transaction-{}.json".format(tx_id)),
+            json=self._read("40-transaction-{}.json".format(tx_id)),
             status=200,
         )
 
@@ -394,31 +396,31 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/accounts",
-            json=self._read("accounts.json"),
+            json=self._read("10-accounts.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("20-counterparties.json"),
             status=200,
         )
         responses.add(
             responses.POST,
             "https://sandbox-b2b.revolut.com/api/1.0/pay",
-            json=self._read("pay-{}.json".format(tx_id)),
+            json=self._read("30-pay-{}.json".format(tx_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/transaction/{}".format(tx_id),
-            json=self._read("transaction-{}.json".format(tx_id)),
+            json=self._read("40-transaction-{}.json".format(tx_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/transactions",
-            json=[self._read("transaction-{}.json".format(tx_id))],
+            json=[self._read("50-transaction-{}.json".format(tx_id))],
             status=200,
         )
 
@@ -445,31 +447,31 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/accounts",
-            json=self._read("accounts.json"),
+            json=self._read("10-accounts.json"),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
-            json=self._read("counterparties.json"),
+            json=self._read("20-counterparties.json"),
             status=200,
         )
         responses.add(
             responses.POST,
             "https://sandbox-b2b.revolut.com/api/1.0/pay",
-            json=self._read("pay-{}.json".format(tx_id)),
+            json=self._read("30-pay-{}.json".format(tx_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/transaction/{}".format(tx_id),
-            json=self._read("transaction-{}.json".format(tx_id)),
+            json=self._read("40-transaction-{}.json".format(tx_id)),
             status=200,
         )
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/transactions",
-            json=[self._read("transaction-{}.json".format(tx_id))],
+            json=[self._read("50-transaction-{}.json".format(tx_id))],
             status=200,
         )
 
@@ -489,6 +491,44 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         self.assertIsInstance(txns[0], Transaction)
         self.assertEqual(tx.id, txns[0].id)
         self.assertEqual("<Transaction {}>".format(tx.id), repr(txns[0]))
+
+    @responses.activate
+    def test_transfer_to_counterparty_personal(self):
+        cpt_id = "0ff7abd1-ee59-431c-aed1-3d6d419b434d"
+        tx_id = "60d2eff2-e8e1-a82d-81bb-deabff41e739"
+        responses.add(
+            responses.GET,
+            "https://sandbox-b2b.revolut.com/api/1.0/accounts",
+            json=self._read("10-accounts.json"),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
+            json=self._read("20-counterparties.json"),
+            status=200,
+        )
+        responses.add(
+            responses.POST,
+            "https://sandbox-b2b.revolut.com/api/1.0/pay",
+            json=self._read("30-pay.json"),
+            status=200,
+        )
+        responses.add(
+            responses.GET,
+            "https://sandbox-b2b.revolut.com/api/1.0/transaction/{:s}".format(tx_id),
+            json=self._read("40-transaction-{}.json".format(tx_id)),
+            status=200,
+        )
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
+        cpt = cli.counterparties[cpt_id]
+        cli.accounts["6ed7aa7c-64d6-4e6f-a52c-6f480a4c94b8"].send(
+            cpt.id,
+            10,
+            "PLN",
+            "req-{}".format(datetime.now().isoformat()),
+        )
 
 
 class TestUtils(TestCase):

@@ -20,5 +20,13 @@ class CounterpartyAddressRequired(RevolutError):
     pass
 
 
-class InsufficientBalance(RevolutError):
+class TransactionError(RevolutError):
+    pass
+
+
+class InsufficientBalance(TransactionError):
+    pass
+
+
+class NoPocketFound(TransactionError):
     pass

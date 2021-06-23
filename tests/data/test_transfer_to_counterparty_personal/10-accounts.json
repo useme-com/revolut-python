@@ -1,0 +1,62 @@
+[
+  {
+    "balance": 28400,
+    "created_at": "2019-09-25T08:33:03.017Z",
+    "currency": "GBP",
+    "id": "6ed7aa7c-64d6-4e6f-a52c-6f480a4c94b8",
+    "name": "Main",
+    "public": true,
+    "state": "active",
+    "updated_at": "2021-06-15T16:37:37.894904Z"
+  },
+  {
+    "balance": 14700,
+    "created_at": "2019-09-25T08:33:03.017Z",
+    "currency": "USD",
+    "id": "6577a810-e4b7-4aa7-8c9a-1d2da6181ccb",
+    "name": "Business trips",
+    "public": true,
+    "state": "active",
+    "updated_at": "2020-07-29T11:40:46.061100Z"
+  },
+  {
+    "balance": 5300,
+    "created_at": "2019-09-25T08:33:03.076Z",
+    "currency": "AUD",
+    "id": "04c67387-f94c-4f30-a54e-1e3c96b047ba",
+    "name": "Payments",
+    "public": false,
+    "state": "active",
+    "updated_at": "2020-07-29T11:40:46.061100Z"
+  },
+  {
+    "balance": 3490,
+    "created_at": "2019-09-25T08:33:03.017Z",
+    "currency": "EUR",
+    "id": "4c88a4b5-65c8-4b44-873e-c5813066fa13",
+    "name": "European suppliers",
+    "public": true,
+    "state": "active",
+    "updated_at": "2020-07-29T11:40:46.061100Z"
+  },
+  {
+    "balance": 1047.6,
+    "created_at": "2021-06-15T16:37:13.988621Z",
+    "currency": "PLN",
+    "id": "3f51a5f5-0109-4d99-b7a8-99febdb0928a",
+    "name": "Z\u0142ot\u00f3wki",
+    "public": false,
+    "state": "active",
+    "updated_at": "2021-06-15T16:37:37.894904Z"
+  },
+  {
+    "balance": 0,
+    "created_at": "2019-12-17T12:52:14.532Z",
+    "currency": "USD",
+    "id": "a22ac4be-c416-4566-8411-5b736ba45c0e",
+    "name": "test0",
+    "public": false,
+    "state": "active",
+    "updated_at": "2020-07-29T11:40:46.061100Z"
+  }
+]

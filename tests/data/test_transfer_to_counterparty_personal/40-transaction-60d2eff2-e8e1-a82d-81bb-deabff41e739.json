@@ -1,0 +1,27 @@
+{
+  "completed_at": "2021-06-23T08:25:22.907602Z",
+  "created_at": "2021-06-23T08:25:22.900644Z",
+  "id": "60d2eff2-e8e1-a82d-81bb-deabff41e739",
+  "legs": [
+    {
+      "account_id": "6ed7aa7c-64d6-4e6f-a52c-6f480a4c94b8",
+      "amount": "-1.9",
+      "balance": "28398.09",
+      "bill_amount": -10,
+      "bill_currency": "PLN",
+      "counterparty": {
+        "account_id": "f5dfb5a1-a18e-45f2-8b46-0a74a37a1d8e",
+        "account_type": "revolut",
+        "id": "0ff7abd1-ee59-431c-aed1-3d6d419b434d"
+      },
+      "currency": "GBP",
+      "description": "To Foo Bar",
+      "fee": "0.01",
+      "leg_id": "51e15702-6a20-4ade-8959-a6b9c2a712f2"
+    }
+  ],
+  "request_id": "test-1c71dca6-9182-439a-8857-65ac2ec7200",
+  "state": "completed",
+  "type": "transfer",
+  "updated_at": "2021-06-23T08:25:22.900644Z"
+}
