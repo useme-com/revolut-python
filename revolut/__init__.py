@@ -77,25 +77,28 @@ class Client(utils._SetEnv):
     def accounts(self):
         if self._accounts is not None:
             return self._accounts
-        self._accounts = {}
+        _accounts = {}
         data = self._get("accounts")
         for accdat in data:
             acc = Account(client=self, **accdat)
-            self._accounts[acc.id] = acc
+            _accounts[acc.id] = acc
+        self._accounts = _accounts
         return self._accounts
 
     @property
     def counterparties(self):
         if self._counterparties is not None:
             return self._counterparties
-        self._counterparties = {}
-        self._cptbyaccount = {}
+        _counterparties = {}
+        _cptbyaccount = {}
         data = self._get("counterparties")
         for cptdat in data:
             cpt = Counterparty(client=self, **cptdat)
-            self._counterparties[cpt.id] = cpt
+            _counterparties[cpt.id] = cpt
             for cptaccid in cpt.accounts.keys():
-                self._cptbyaccount[cptaccid] = cpt
+                _cptbyaccount[cptaccid] = cpt
+        self._counterparties = _counterparties
+        self._cptbyaccount = _cptbyaccount
         return self._counterparties
 
     def _refresh_counterparties(self):
