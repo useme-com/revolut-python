@@ -13,7 +13,7 @@ except ImportError:  # pragma: nocover
     from urllib import urlencode
 from . import exceptions, utils
 
-__version__ = "0.8"
+__version__ = "0.8.1"
 
 _log = logging.getLogger(__name__)
 
