@@ -46,6 +46,8 @@ class Client(utils._SetEnv):
             if rsp.status_code == 400:
                 if "o pocket found" in message:
                     raise exceptions.NoPocketFound(message)
+                if "BIC and IBAN does not match" in message:
+                    raise exceptions.BICIBANMismatch(message)
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
             if rsp.status_code == 422:

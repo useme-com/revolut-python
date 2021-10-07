@@ -20,6 +20,10 @@ class CounterpartyAddressRequired(RevolutError):
     pass
 
 
+class BICIBANMismatch(RevolutError):
+    pass
+
+
 class TransactionError(RevolutError):
     pass
 
