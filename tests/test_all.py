@@ -2,6 +2,7 @@ from datetime import datetime, date
 from decimal import Decimal
 import inspect
 import json
+import operator
 import os
 import responses
 from unittest import TestCase
@@ -148,16 +149,28 @@ class TestRevolut(TestCase, JSONResponsesMixin):
                 self.assertIsInstance(acc, CounterpartyAccount)
                 self.assertEqual(accid, acc.id)
 
+    @responses.activate
+    def test_delete_counterparty(self):
         responses.add(
-            responses.DELETE,
-            "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(cpt.id),
-            status=204,
+            responses.GET,
+            "https://sandbox-b2b.revolut.com/api/1.0/counterparties",
+            json=self._read("10-counterparties.json"),
+            status=200,
         )
-        cptid = cpt.id
-        cpt.delete()
-        self.assertIsNone(cpt.id)
-        self.assertRaises(ValueError, cpt.delete)
-        self.assertNotIn(cptid, cli.counterparties)
+        tssn = TemporarySession(self.access_token)
+        cli = Client(tssn)
+        counterparties = list(sorted(cli.counterparties.items(), key=operator.itemgetter(0)))
+        for cptid, cpt in counterparties:
+            responses.add(
+                responses.DELETE,
+                "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(cpt.id),
+                status=204,
+            )
+        for cptid, cpt in counterparties:
+            cpt.delete()
+            self.assertIsNone(cpt.id)
+            self.assertRaises(ValueError, cpt.delete)
+            self.assertNotIn(cptid, cli.counterparties)
 
     @responses.activate
     def test_add_counterparty_personal(self):
