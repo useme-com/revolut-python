@@ -159,11 +159,15 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
         tssn = TemporarySession(self.access_token)
         cli = Client(tssn)
-        counterparties = list(sorted(cli.counterparties.items(), key=operator.itemgetter(0)))
+        counterparties = list(
+            sorted(cli.counterparties.items(), key=operator.itemgetter(0))
+        )
         for cptid, cpt in counterparties:
             responses.add(
                 responses.DELETE,
-                "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(cpt.id),
+                "https://sandbox-b2b.revolut.com/api/1.0/counterparty/{}".format(
+                    cpt.id
+                ),
                 status=204,
             )
         for cptid, cpt in counterparties:
