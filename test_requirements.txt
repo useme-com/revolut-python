@@ -1,6 +1,7 @@
 coverage
 coveralls
 pip
+pre-commit
 pytest-cov
 pytest-runner
 pytest

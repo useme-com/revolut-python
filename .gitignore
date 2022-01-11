@@ -1,6 +1,8 @@
 .*
 !.gitignore
 !.travis.yml
+!.pre-commit-config.yaml
+!.bumpversion.cfg
 *~
 *.py[co]
 __pycache__
