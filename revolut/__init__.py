@@ -48,6 +48,8 @@ class Client(utils._SetEnv):
                     raise exceptions.NoPocketFound(message)
                 if "BIC and IBAN does not match" in message:
                     raise exceptions.BICIBANMismatch(message)
+                if "ould not interpret numbers after plus-sign" in message:
+                    raise exceptions.InvalidPhoneNumber(message)
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
             if rsp.status_code == 422:

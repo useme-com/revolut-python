@@ -24,6 +24,10 @@ class BICIBANMismatch(RevolutError):
     pass
 
 
+class InvalidPhoneNumber(RevolutError):
+    pass
+
+
 class TransactionError(RevolutError):
     pass
 
