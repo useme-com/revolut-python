@@ -9,26 +9,36 @@ class RevolutHttpError(RevolutError):
 
 
 class Unauthorized(RevolutHttpError):
+    """Usually a HTTP 401/Unauthorized."""
+
     pass
 
 
-class CounterpartyAlreadyExists(RevolutError):
+class RequestDataError(RevolutError):
+    """An exception that most probably originates from invalid data passed in the request."""
+
     pass
 
 
-class CounterpartyAddressRequired(RevolutError):
+class CounterpartyAlreadyExists(RequestDataError):
     pass
 
 
-class BICIBANMismatch(RevolutError):
+class CounterpartyAddressRequired(RequestDataError):
     pass
 
 
-class InvalidPhoneNumber(RevolutError):
+class BICIBANMismatch(RequestDataError):
+    pass
+
+
+class InvalidPhoneNumber(RequestDataError):
     pass
 
 
 class TransactionError(RevolutError):
+    """An exception that makes a transaction impossible to perform."""
+
     pass
 
 
