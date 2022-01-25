@@ -36,6 +36,10 @@ class InvalidPhoneNumber(RequestDataError):
     pass
 
 
+class MissingFields(RequestDataError):
+    pass
+
+
 class TransactionError(RevolutError):
     """An exception that makes a transaction impossible to perform."""
 
