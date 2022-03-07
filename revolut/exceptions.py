@@ -52,3 +52,11 @@ class InsufficientBalance(TransactionError):
 
 class NoPocketFound(TransactionError):
     pass
+
+
+class CurrencyMismatch(ValueError, RevolutError):
+    pass
+
+
+class DestinationNotFound(ValueError, RevolutError):
+    pass

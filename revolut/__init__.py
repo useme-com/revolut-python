@@ -220,7 +220,7 @@ class Account(_UpdateFromKwargsMixin):
         try:
             cpt = self.client._cptbyaccount[destid]
             if cpt.accounts[destid].currency != currency:
-                raise ValueError(
+                raise exceptions.CurrencyMismatch(
                     "Currency {} does not match the destination currency: {}".format(
                         currency, cpt.accounts[destid].currency
                     )
@@ -232,7 +232,7 @@ class Account(_UpdateFromKwargsMixin):
             try:
                 cpt = self.client.counterparties[destid]
             except KeyError:
-                raise ValueError(
+                raise exceptions.DestinationNotFound(
                     "Cannot find {:s} either among counterparties, their accounts or our own accounts".format(
                         destid
                     )
