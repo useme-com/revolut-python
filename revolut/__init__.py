@@ -441,6 +441,7 @@ class CounterpartyExternalAccount(CounterpartyAccount):
     email = ""
     bank_country = ""
     recipient_charges = ""
+    bsb_code = ""
 
     def __repr__(self):
         return "<CounterpartyExternalAccount {}>".format(self.id)
