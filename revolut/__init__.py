@@ -20,18 +20,24 @@ _log = logging.getLogger(__name__)
 
 class Client(utils._SetEnv):
     live = False
+    timeout = 10
+    _requester = None  # requests.Session()
     _session = None
     _accounts = None
     _counterparties = None
     _cptbyaccount = None
 
-    def __init__(self, session):
+    def __init__(self, session, timeout=None):
         self._set_env(session.access_token)
         self._session = session
+        self.timeout = timeout
+        self._requester = requests.Session()
+        self._requester.headers.update(
+            {"Authorization": "Bearer {}".format(self._session.access_token)}
+        )
 
     def _request(self, func, path, data=None):
         url = urljoin(self.base_url, path)
-        hdr = {"Authorization": "Bearer {}".format(self._session.access_token)}
         _log.debug("{}".format(path))
         if data is not None:
             _log.debug(
@@ -41,7 +47,7 @@ class Client(utils._SetEnv):
                     )
                 )
             )
-        rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
+        rsp = func(url, data=json.dumps(data) if data else None, timeout=self.timeout)
         if rsp.status_code == 204:
             result = None
         else:
@@ -77,13 +83,13 @@ class Client(utils._SetEnv):
 
     def _get(self, path, data=None):
         path = "{}?{}".format(path, urlencode(data)) if data is not None else path
-        return self._request(requests.get, path)
+        return self._request(self._requester.get, path)
 
     def _post(self, path, data=None):
-        return self._request(requests.post, path, data or {})
+        return self._request(self._requester.post, path, data or {})
 
     def _delete(self, path, data=None):
-        return self._request(requests.delete, path, data or {})
+        return self._request(self._requester.delete, path, data or {})
 
     @property
     def accounts(self):

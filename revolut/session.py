@@ -17,6 +17,7 @@ _log = logging.getLogger(__name__)
 
 
 class BaseSession(utils._SetEnv):
+    _timeout = 10
     _access_token = None
 
     def refresh_access_token(self):
@@ -32,7 +33,7 @@ class BaseSession(utils._SetEnv):
 class TemporarySession(BaseSession):
     """Accepts access token and maintains a temporary session limited by the token's lifetime."""
 
-    def __init__(self, access_token):
+    def __init__(self, access_token, timeout=None):
         self._set_env(access_token)
         self._access_token = access_token
 
@@ -45,12 +46,13 @@ class RenewableSession(BaseSession):
 
     refresh_token = None
 
-    def __init__(self, refresh_token, client_id, jwt, access_token=None):
+    def __init__(self, refresh_token, client_id, jwt, access_token=None, timeout=None):
         self._access_token = access_token or self._access_token
         self._set_env(refresh_token)
         self.refresh_token = refresh_token
         self.client_id = client_id
         self.jwt = jwt
+        self._timeout = timeout or self._timeout
 
     def refresh_access_token(self):
         self._request_token()
@@ -86,6 +88,7 @@ class RenewableSession(BaseSession):
             urljoin(self.base_url, "auth/token"),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             data=data,
+            timeout=self._timeout,
         )
         result = rsp.json()
         _log.debug(
@@ -113,11 +116,12 @@ class TokenProvider(RenewableSession):
 
     auth_code_spent = False
 
-    def __init__(self, auth_code, client_id, jwt):
+    def __init__(self, auth_code, client_id, jwt, timeout=None):
         self._set_env(auth_code)
         self.auth_code = auth_code
         self.client_id = client_id
         self.jwt = jwt
+        self._timeout = timeout or self._timeout
         self._request_token()
 
     @property
