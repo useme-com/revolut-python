@@ -470,6 +470,7 @@ class Transaction(_UpdateFromKwargsMixin):
     reference = None
     merchant = None
     card = None
+    revertable = False
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
