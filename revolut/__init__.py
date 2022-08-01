@@ -166,6 +166,66 @@ class Client(utils._SetEnv):
     # TODO: def transaction_by_request_id(self, request_id):
 
 
+class ClientMerchant(utils._SetEnv):
+    live = False
+    _session = None
+
+    def __init__(self, session):
+        self._set_env(session.access_token)
+        self._session = session
+
+    def _request(self, func, path, data=None):
+        url = urljoin(self.base_url, path)
+        hdr = {"Authorization": "Bearer {}".format(self._session.merchant_token)}
+        _log.debug("{}".format(path))
+        if data is not None:
+            _log.debug(
+                "data: {}".format(
+                    json.dumps(
+                        data, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
+                    )
+                )
+            )
+        rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
+        if rsp.status_code == 204:
+            result = None
+        else:
+            result = rsp.json(parse_float=Decimal)
+        if rsp.status_code < 200 or rsp.status_code >= 300:
+            message = result.get("message", "No message supplied")
+            _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
+            if rsp.status_code == 401:
+                raise exceptions.Unauthorized(rsp.status_code, message)
+            raise exceptions.RevolutHttpError(rsp.status_code, message)
+        if result:
+            _ppresult = json.dumps(
+                result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
+            )
+            _log.debug("Result:\n{result}".format(result=_ppresult))
+        return result
+
+    def _get(self, path, data=None):
+        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
+        return self._request(requests.get, path)
+
+    def _post(self, path, data=None):
+        return self._request(requests.post, path, data or {})
+
+    def _delete(self, path, data=None):
+        return self._request(requests.delete, path, data or {})
+
+    def create_order(
+        self, amount=None, currency=None
+    ):
+        reqdata = {}
+        if amount:
+            reqdata["amount"] = amount
+        if currency:
+            reqdata["currency"] = currency
+        data = self._post("orders", data=reqdata or None)
+        return data
+
+
 class _UpdateFromKwargsMixin(object):
     def _update(self, **kwargs):
         for k, v in kwargs.items():
