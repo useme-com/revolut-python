@@ -166,8 +166,7 @@ class Client(utils._SetEnv):
     # TODO: def transaction_by_request_id(self, request_id):
 
 
-class ClientMerchant(utils._SetEnv):
-    live = False
+class MerchantClient(utils._SetEnv):
     _session = None
 
     def __init__(self, session):
@@ -176,7 +175,7 @@ class ClientMerchant(utils._SetEnv):
 
     def _request(self, func, path, data=None):
         url = urljoin(self.base_url, path)
-        hdr = {"Authorization": "Bearer {}".format(self._session.merchant_token)}
+        hdr = {"Authorization": "Bearer {}".format(self._session._access_token)}
         _log.debug("{}".format(path))
         if data is not None:
             _log.debug(
@@ -215,7 +214,7 @@ class ClientMerchant(utils._SetEnv):
         return self._request(requests.delete, path, data or {})
 
     def create_order(
-        self, amount=None, currency=None
+        self, amount, currency
     ):
         reqdata = {}
         if amount:
