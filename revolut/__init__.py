@@ -14,7 +14,7 @@ except ImportError:  # pragma: nocover # 2.x
 from . import exceptions, utils
 from .session import BaseSession
 
-__version__ = "0.8.6"
+__version__ = "0.8.7"
 
 _log = logging.getLogger(__name__)
 

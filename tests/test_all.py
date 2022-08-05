@@ -330,7 +330,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         cli = Client(tssn)
         cpt = ExternalCounterparty(
             client=cli,
-            company_name=u"Kogucik S.A.",
+            company_name="Kogucik S.A.",
             bank_country="PL",
             currency="PLN",
             phone="+48123456789",
