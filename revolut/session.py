@@ -1,13 +1,8 @@
-from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import json
 import logging
 import requests
-
-try:  # pragma: nocover
-    from urllib.parse import urljoin  # 3.x
-except ImportError:  # pragma: nocover
-    from urlparse import urljoin  # type: ignore # 2.x
+from urllib.parse import urljoin
 from . import exceptions
 from . import utils
 
@@ -17,8 +12,8 @@ _log = logging.getLogger(__name__)
 
 
 class BaseSession(utils._SetEnv):
-    _timeout = 10
-    _access_token = None
+    _timeout: int = 10
+    _access_token: str
 
     def refresh_access_token(self):
         raise NotImplementedError(
@@ -44,7 +39,7 @@ class RenewableSession(BaseSession):
     You may provide it with existing `access_token`. If missing, it will obtain a new one.
     """
 
-    refresh_token = None
+    refresh_token: str
 
     def __init__(self, refresh_token, client_id, jwt, access_token=None, timeout=None):
         self._access_token = access_token or self._access_token
@@ -114,7 +109,7 @@ class TokenProvider(RenewableSession):
     `TemporarySession` or `RenewableSession` object.
     """
 
-    auth_code_spent = False
+    auth_code_spent: bool = False
 
     def __init__(self, auth_code, client_id, jwt, timeout=None):
         self._set_env(auth_code)

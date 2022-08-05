@@ -1,27 +1,20 @@
-from __future__ import unicode_literals
-
 import dateutil.parser
 from decimal import Decimal
 import json
 import logging
 import requests
-
-try:  # pragma: nocover
-    from urllib.parse import urljoin, urlencode  # 3.x
-except ImportError:  # pragma: nocover # 2.x
-    from urlparse import urljoin  # type: ignore
-    from urllib import urlencode  # type: ignore
+from urllib.parse import urljoin, urlencode
 from . import exceptions, utils
 from .session import BaseSession
 
-__version__ = "0.8.7"
+__version__ = "0.9"
 
 _log = logging.getLogger(__name__)
 
 
 class Client(utils._SetEnv):
-    live = False
-    timeout = 10
+    live: bool = False
+    timeout: int | None = 10
     _requester: requests.Session
     _session: BaseSession
     _accounts: dict
@@ -230,12 +223,12 @@ class _UpdateFromKwargsMixin(object):
 
 class Account(_UpdateFromKwargsMixin):
     client: Client
-    id = ""
-    name = ""
-    currency = ""
-    balance = Decimal(0)
-    state = ""
-    public = False
+    id: str
+    name: str
+    currency: str
+    balance: Decimal = Decimal(0)
+    state: str
+    public: bool = False
     created_at = None
     updated_at = None
 
@@ -330,13 +323,13 @@ class Account(_UpdateFromKwargsMixin):
 
 class Counterparty(_UpdateFromKwargsMixin):
     client: Client
-    id = None
-    name = ""
-    email = ""
-    phone = ""
-    profile_type = ""
-    country = ""
-    state = ""
+    id: str | None
+    name: str
+    email: str
+    phone: str
+    profile_type: str
+    country: str
+    state: str
     created_at = None
     updated_at = None
     accounts: dict
@@ -415,19 +408,19 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
     create such counterparties. The `.save()` method will return the resulting `Counterparty`
     object and the original `ExternalCounterparty` should be discarded afterwards."""
 
-    id = None
+    id: str | None
     client: Client
     account_no: str
-    email = ""
-    phone = ""
-    company_name = ""
-    individual_name = None
-    bank_country = ""
-    currency = None
-    phone = ""
-    address = None
-    iban = None
-    bic = None
+    email: str
+    phone: str
+    company_name: str | None
+    individual_name: dict | None
+    bank_country: str
+    currency: str
+    phone: str
+    address: str
+    iban: str
+    bic: str
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -482,9 +475,9 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
 
 
 class CounterpartyAccount(_UpdateFromKwargsMixin):
-    id = None
-    name = ""
-    currency = ""
+    id: str | None
+    name: str
+    currency: str
 
     def __init__(self, **kwargs):
         self._check_type(kwargs.pop("type"))
@@ -498,15 +491,15 @@ class CounterpartyAccount(_UpdateFromKwargsMixin):
 
 
 class CounterpartyExternalAccount(CounterpartyAccount):
-    account_no = ""
-    iban = ""
-    sort_code = ""
-    routing_number = ""
-    bic = ""
-    email = ""
-    bank_country = ""
-    recipient_charges = ""
-    bsb_code = ""
+    account_no: str
+    iban: str
+    sort_code: str
+    routing_number: str
+    bic: str
+    email: str
+    bank_country: str
+    recipient_charges: str
+    bsb_code: str
 
     def __repr__(self):
         return "<CounterpartyExternalAccount {}>".format(self.id)
@@ -516,20 +509,18 @@ class CounterpartyExternalAccount(CounterpartyAccount):
 
 
 class Transaction(_UpdateFromKwargsMixin):
-    id = None
-    client = None
-    type = ""
-    state = ""
-    reason_code = ""
+    id: str | None
+    client: Client
+    type: str
+    state: str
+    reason_code: str
     created_at = None
     completed_at = None
     updated_at = None
     legs: list
-    request_id = None
-    reference = None
-    merchant = None
-    card = None
-    revertable = False
+    request_id: str
+    reference: str | None
+    revertable: bool = False
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
