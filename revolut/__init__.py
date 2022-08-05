@@ -8,10 +8,11 @@ import requests
 
 try:  # pragma: nocover
     from urllib.parse import urljoin, urlencode  # 3.x
-except ImportError:  # pragma: nocover
-    from urlparse import urljoin  # 2.x
-    from urllib import urlencode
+except ImportError:  # pragma: nocover # 2.x
+    from urlparse import urljoin  # type: ignore
+    from urllib import urlencode  # type: ignore
 from . import exceptions, utils
+from .session import BaseSession
 
 __version__ = "0.8.6"
 
@@ -21,11 +22,11 @@ _log = logging.getLogger(__name__)
 class Client(utils._SetEnv):
     live = False
     timeout = 10
-    _requester = None  # requests.Session()
-    _session = None
-    _accounts = None
-    _counterparties = None
-    _cptbyaccount = None
+    _requester: requests.Session
+    _session: BaseSession
+    _accounts: dict
+    _counterparties: dict
+    _cptbyaccount: dict
 
     def __init__(self, session, timeout=None):
         self._set_env(session.access_token)
@@ -48,12 +49,11 @@ class Client(utils._SetEnv):
                 )
             )
         rsp = func(url, data=json.dumps(data) if data else None, timeout=self.timeout)
-        if rsp.status_code == 204:
-            result = None
-        else:
+        result = None
+        if rsp.status_code != 204:
             result = rsp.json(parse_float=Decimal)
         if rsp.status_code < 200 or rsp.status_code >= 300:
-            message = result.get("message", "No message supplied")
+            message = getattr(result, "message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
             if rsp.status_code == 400:
                 if "o pocket found" in message:
@@ -82,7 +82,7 @@ class Client(utils._SetEnv):
         return result
 
     def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
+        path = "{}?{}".format(path, urlencode(data)) if data else path
         return self._request(self._requester.get, path)
 
     def _post(self, path, data=None):
@@ -120,7 +120,7 @@ class Client(utils._SetEnv):
         return self._counterparties
 
     def _refresh_counterparties(self):
-        self._counterparties = self._cptbyaccount = None
+        self._counterparties = self._cptbyaccount = {}
         _ = self.counterparties
 
     def transactions(
@@ -167,7 +167,7 @@ class Client(utils._SetEnv):
 
 
 class MerchantClient(utils._SetEnv):
-    _session = None
+    _session: BaseSession
 
     def __init__(self, session):
         self._set_env(session.access_token)
@@ -186,12 +186,11 @@ class MerchantClient(utils._SetEnv):
                 )
             )
         rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
-        if rsp.status_code == 204:
-            result = None
-        else:
+        result = None
+        if rsp.status_code != 204:
             result = rsp.json(parse_float=Decimal)
         if rsp.status_code < 200 or rsp.status_code >= 300:
-            message = result.get("message", "No message supplied")
+            message = getattr(result, "message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
@@ -213,15 +212,9 @@ class MerchantClient(utils._SetEnv):
     def _delete(self, path, data=None):
         return self._request(requests.delete, path, data or {})
 
-    def create_order(
-        self, amount, currency
-    ):
-        reqdata = {}
-        if amount:
-            reqdata["amount"] = amount
-        if currency:
-            reqdata["currency"] = currency
-        data = self._post("orders", data=reqdata or None)
+    def create_order(self, amount, currency):
+        data = {"amount": amount, "currency": currency}
+        data = self._post("orders", data=data)
         return data
 
 
@@ -236,7 +229,7 @@ class _UpdateFromKwargsMixin(object):
 
 
 class Account(_UpdateFromKwargsMixin):
-    client = None
+    client: Client
     id = ""
     name = ""
     currency = ""
@@ -252,8 +245,12 @@ class Account(_UpdateFromKwargsMixin):
 
     def _update(self, **kwargs):
         super(Account, self)._update(**kwargs)
-        self.created_at = dateutil.parser.parse(self.created_at)
-        self.updated_at = dateutil.parser.parse(self.updated_at)
+        self.created_at = (
+            dateutil.parser.parse(self.created_at) if self.created_at else None
+        )
+        self.updated_at = (
+            dateutil.parser.parse(self.updated_at) if self.updated_at else None
+        )
         self.balance = Decimal(self.balance)
 
     def __repr__(self):
@@ -281,7 +278,7 @@ class Account(_UpdateFromKwargsMixin):
         ):
             return self._transfer_internal(destid, amount, request_id, reference)
         _ = self.client.counterparties  # NOTE: make sure counterparties are loaded
-        cpt = None
+        cpt, receiver = None, {}
         try:
             cpt = self.client._cptbyaccount[destid]
             if cpt.accounts[destid].currency != currency:
@@ -303,6 +300,8 @@ class Account(_UpdateFromKwargsMixin):
                     )
                 )
             receiver = {"counterparty_id": cpt.id}
+        if not receiver:
+            raise ValueError("Receiver cannot be empty")
         reqdata = {
             "request_id": request_id,
             "account_id": self.id,
@@ -330,7 +329,7 @@ class Account(_UpdateFromKwargsMixin):
 
 
 class Counterparty(_UpdateFromKwargsMixin):
-    client = None
+    client: Client
     id = None
     name = ""
     email = ""
@@ -340,7 +339,7 @@ class Counterparty(_UpdateFromKwargsMixin):
     state = ""
     created_at = None
     updated_at = None
-    accounts = None
+    accounts: dict
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -417,7 +416,8 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
     object and the original `ExternalCounterparty` should be discarded afterwards."""
 
     id = None
-    client = None
+    client: Client
+    account_no: str
     email = ""
     phone = ""
     company_name = ""
@@ -524,7 +524,7 @@ class Transaction(_UpdateFromKwargsMixin):
     created_at = None
     completed_at = None
     updated_at = None
-    legs = None
+    legs: list
     request_id = None
     reference = None
     merchant = None

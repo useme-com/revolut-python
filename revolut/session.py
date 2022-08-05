@@ -7,7 +7,7 @@ import requests
 try:  # pragma: nocover
     from urllib.parse import urljoin  # 3.x
 except ImportError:  # pragma: nocover
-    from urlparse import urljoin  # 2.x
+    from urlparse import urljoin  # type: ignore # 2.x
 from . import exceptions
 from . import utils
 
