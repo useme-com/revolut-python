@@ -172,7 +172,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             )
         for cptid, cpt in counterparties:
             cpt.delete()
-            self.assertIsNone(cpt.id)
+            self.assertFalse(cpt.id)
             self.assertRaises(ValueError, cpt.delete)
             self.assertNotIn(cptid, cli.counterparties)
 

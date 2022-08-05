@@ -13,7 +13,7 @@ _log = logging.getLogger(__name__)
 
 class BaseSession(utils._SetEnv):
     _timeout: int = 10
-    _access_token: str
+    _access_token: str = ""
 
     def refresh_access_token(self):
         raise NotImplementedError(
@@ -39,7 +39,7 @@ class RenewableSession(BaseSession):
     You may provide it with existing `access_token`. If missing, it will obtain a new one.
     """
 
-    refresh_token: str
+    refresh_token: str = ""
 
     def __init__(self, refresh_token, client_id, jwt, access_token=None, timeout=None):
         self._access_token = access_token or self._access_token

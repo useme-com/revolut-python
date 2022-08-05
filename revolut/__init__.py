@@ -17,9 +17,9 @@ class Client(utils._SetEnv):
     timeout: int | None = 10
     _requester: requests.Session
     _session: BaseSession
-    _accounts: dict
-    _counterparties: dict
-    _cptbyaccount: dict
+    _accounts: dict = {}
+    _counterparties: dict = {}
+    _cptbyaccount: dict = {}
 
     def __init__(self, session, timeout=None):
         self._set_env(session.access_token)
@@ -86,7 +86,7 @@ class Client(utils._SetEnv):
 
     @property
     def accounts(self):
-        if self._accounts is not None:
+        if self._accounts:
             return self._accounts
         _accounts = {}
         data = self._get("accounts")
@@ -98,7 +98,7 @@ class Client(utils._SetEnv):
 
     @property
     def counterparties(self):
-        if self._counterparties is not None:
+        if self._counterparties:
             return self._counterparties
         _counterparties = {}
         _cptbyaccount = {}
@@ -223,11 +223,11 @@ class _UpdateFromKwargsMixin(object):
 
 class Account(_UpdateFromKwargsMixin):
     client: Client
-    id: str
-    name: str
-    currency: str
+    id: str = ""
+    name: str = ""
+    currency: str = ""
     balance: Decimal = Decimal(0)
-    state: str
+    state: str = ""
     public: bool = False
     created_at = None
     updated_at = None
@@ -323,16 +323,16 @@ class Account(_UpdateFromKwargsMixin):
 
 class Counterparty(_UpdateFromKwargsMixin):
     client: Client
-    id: str | None
-    name: str
-    email: str
-    phone: str
-    profile_type: str
-    country: str
-    state: str
+    id: str = ""
+    name: str = ""
+    email: str = ""
+    phone: str = ""
+    profile_type: str = ""
+    country: str = ""
+    state: str = ""
     created_at = None
     updated_at = None
-    accounts: dict
+    accounts: dict = {}
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -373,7 +373,7 @@ class Counterparty(_UpdateFromKwargsMixin):
         return self
 
     def save(self):
-        if self.id is not None:
+        if self.id:
             raise exceptions.CounterpartyAlreadyExists(
                 "The object's ID is set. It has been saved already."
             )
@@ -400,7 +400,7 @@ class Counterparty(_UpdateFromKwargsMixin):
             raise ValueError("{} doesn't have an ID. Cannot delete.".format(self))
         self.client._delete("counterparty/{}".format(self.id))
         del self.client._counterparties[self.id]
-        self.id = None
+        self.id = ""
 
 
 class ExternalCounterparty(_UpdateFromKwargsMixin):
@@ -408,19 +408,19 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
     create such counterparties. The `.save()` method will return the resulting `Counterparty`
     object and the original `ExternalCounterparty` should be discarded afterwards."""
 
-    id: str | None
+    id: str = ""
     client: Client
-    account_no: str
-    email: str
-    phone: str
-    company_name: str | None
-    individual_name: dict | None
-    bank_country: str
-    currency: str
-    phone: str
-    address: str
-    iban: str
-    bic: str
+    account_no: str = ""
+    email: str = ""
+    phone: str = ""
+    company_name: str = ""
+    individual_name: dict = {}
+    bank_country: str = ""
+    currency: str = ""
+    phone: str = ""
+    address: str = ""
+    iban: str = ""
+    bic: str = ""
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -438,7 +438,7 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
         )
 
     def save(self):
-        if self.id is not None:
+        if self.id:
             raise exceptions.CounterpartyAlreadyExists(
                 "The object's ID is set. It has been saved already."
             )
@@ -475,9 +475,9 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
 
 
 class CounterpartyAccount(_UpdateFromKwargsMixin):
-    id: str | None
-    name: str
-    currency: str
+    id: str | None = None
+    name: str = ""
+    currency: str = ""
 
     def __init__(self, **kwargs):
         self._check_type(kwargs.pop("type"))
@@ -491,15 +491,15 @@ class CounterpartyAccount(_UpdateFromKwargsMixin):
 
 
 class CounterpartyExternalAccount(CounterpartyAccount):
-    account_no: str
-    iban: str
-    sort_code: str
-    routing_number: str
-    bic: str
-    email: str
-    bank_country: str
-    recipient_charges: str
-    bsb_code: str
+    account_no: str = ""
+    iban: str = ""
+    sort_code: str = ""
+    routing_number: str = ""
+    bic: str = ""
+    email: str = ""
+    bank_country: str = ""
+    recipient_charges: str = ""
+    bsb_code: str = ""
 
     def __repr__(self):
         return "<CounterpartyExternalAccount {}>".format(self.id)
@@ -509,17 +509,17 @@ class CounterpartyExternalAccount(CounterpartyAccount):
 
 
 class Transaction(_UpdateFromKwargsMixin):
-    id: str | None
+    id: str = ""
     client: Client
-    type: str
-    state: str
-    reason_code: str
+    type: str = ""
+    state: str = ""
+    reason_code: str = ""
     created_at = None
     completed_at = None
     updated_at = None
-    legs: list
-    request_id: str
-    reference: str | None
+    legs: list = []
+    request_id: str = ""
+    reference: str = ""
     revertable: bool = False
 
     def __init__(self, **kwargs):
