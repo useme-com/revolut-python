@@ -214,15 +214,17 @@ class MerchantClient(utils._SetEnv):
         return self._request(requests.delete, path, data or {})
 
     def create_order(
-        self, amount, currency
+        self, amount, currency, token
     ):
         reqdata = {}
         if amount:
             reqdata["amount"] = amount
         if currency:
             reqdata["currency"] = currency
+        if token:
+            reqdata["merchant_order_ext_ref"] = token
         data = self._post("orders", data=reqdata or None)
-        return data
+        return Order(client=self, **data)
 
 
 class _UpdateFromKwargsMixin(object):
@@ -562,4 +564,33 @@ class Transaction(_UpdateFromKwargsMixin):
         )
         self.completed_at = (
             dateutil.parser.parse(self.completed_at) if self.completed_at else None
+        )
+
+
+class Order(_UpdateFromKwargsMixin):
+    id: str | None
+    public_id: str | None
+    merchant_order_ext_ref: str
+    type: str
+    state: str
+    created_at = None
+    updated_at = None
+    capture_mode: str
+    value: str
+    currency: str
+
+    def __init__(self, **kwargs):
+        self.client = kwargs.pop("client")
+        self._update(**kwargs)
+
+    def __repr__(self):
+        return f"<Order {self.id}>"
+
+    def _update(self, **kwargs):
+        super(Order, self)._update(**kwargs)
+        self.created_at = (
+            dateutil.parser.parse(self.created_at) if self.created_at else None
+        )
+        self.updated_at = (
+            dateutil.parser.parse(self.updated_at) if self.updated_at else None
         )
