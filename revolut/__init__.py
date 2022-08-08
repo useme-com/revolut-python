@@ -224,7 +224,7 @@ class MerchantClient(utils._SetEnv):
         if token:
             reqdata["merchant_order_ext_ref"] = token
         data = self._post("orders", data=reqdata or None)
-        return Order(client=self, **data)
+        return data
 
 
 class _UpdateFromKwargsMixin(object):
@@ -568,8 +568,9 @@ class Transaction(_UpdateFromKwargsMixin):
 
 
 class Order(_UpdateFromKwargsMixin):
-    id: str | None
-    public_id: str | None
+    id: str 
+    client = None
+    public_id: str 
     merchant_order_ext_ref: str
     type: str
     state: str
