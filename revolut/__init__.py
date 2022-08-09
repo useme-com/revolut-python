@@ -581,6 +581,7 @@ class Order(_UpdateFromKwargsMixin):
     currency = ""
     order_amount = dict()
     order_outstanding_amount = dict()
+    metadata = dict()
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
