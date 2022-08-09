@@ -579,6 +579,7 @@ class Order(_UpdateFromKwargsMixin):
     capture_mode = ""
     value = ""
     currency = ""
+    order_amount = dict()
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -595,3 +596,5 @@ class Order(_UpdateFromKwargsMixin):
         self.updated_at = (
             dateutil.parser.parse(self.updated_at) if self.updated_at else None
         )
+        self.value = self.order_amount["value"] if self.order_amount else ""
+        self.currency = self.order_amount["currency"] if self.order_amount else ""
