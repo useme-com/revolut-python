@@ -568,17 +568,17 @@ class Transaction(_UpdateFromKwargsMixin):
 
 
 class Order(_UpdateFromKwargsMixin):
-    id: str 
+    id = ""
     client = None
-    public_id: str 
-    merchant_order_ext_ref: str
-    type: str
-    state: str
+    public_id = ""
+    merchant_order_ext_ref = ""
+    type = ""
+    state = ""
     created_at = None
     updated_at = None
-    capture_mode: str
-    value: str
-    currency: str
+    capture_mode = ""
+    value = ""
+    currency = ""
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
