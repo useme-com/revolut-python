@@ -170,10 +170,14 @@ class TestRevolut(TestCase, JSONResponsesMixin):
                 ),
                 status=204,
             )
+        # NOTE: We don't have to mock another /counterparties response because the
+        # Client._counterparties property is being maintained without hitting the
+        # API endpoints.
         for cptid, cpt in counterparties:
             cpt.delete()
             self.assertIsNone(cpt.id)
             self.assertRaises(ValueError, cpt.delete)
+            # The original mocked response would return an error here (excess counterparty)
             self.assertNotIn(cptid, cli.counterparties)
 
     @responses.activate
