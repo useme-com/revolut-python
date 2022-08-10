@@ -233,14 +233,22 @@ class MerchantClient(utils._SetEnv):
         orders = []
         reqdata = {}
         if from_date:
-            reqdata["from_created_date"] = datetime.strptime(from_date, "yyyy-MM-dd'T'HH:mm:ssZ")
+            reqdata["from_created_date"] = datetime.strptime(str(from_date), "yyyy-MM-dd'T'HH:mm:ssZ")
         if to_date:
-            reqdata["to_created_date"] = datetime.strptime(to_date, "yyyy-MM-dd'T'HH:mm:ssZ")
+            reqdata["to_created_date"] = datetime.strptime(str(to_date), "yyyy-MM-dd'T'HH:mm:ssZ")
         data = self._get("orders", data=reqdata or None)
         for txdat in data:
             txn = Order(client=self, **txdat)
             orders.append(txn)
         return orders
+
+    def order(self, order_id):
+        reqdata = {}
+        if order_id:
+            reqdata["order_id"] = order_id
+        data = self._post("orders", data=reqdata or None)
+        return Order(client=self, **data)
+
 
 
 class _UpdateFromKwargsMixin(object):
