@@ -243,7 +243,7 @@ class MerchantClient(utils._SetEnv):
         return orders
 
     def order(self, order_id):
-        data = self.get(f"orders/{order_id}")
+        data = self._get(f"orders/{order_id}")
         return Order(client=self, **data)
 
 
