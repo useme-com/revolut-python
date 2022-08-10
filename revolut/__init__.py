@@ -243,12 +243,8 @@ class MerchantClient(utils._SetEnv):
         return orders
 
     def order(self, order_id):
-        reqdata = {}
-        if order_id:
-            reqdata["order_id"] = order_id
-        data = self._post("orders", data=reqdata or None)
+        data = self.get(f"orders/{order_id}")
         return Order(client=self, **data)
-
 
 
 class _UpdateFromKwargsMixin(object):
