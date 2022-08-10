@@ -226,6 +226,21 @@ class MerchantClient(utils._SetEnv):
         data = self._post("orders", data=reqdata or None)
         return Order(client=self, **data)
 
+    def orders(
+        self, from_date=None, to_date=None
+    ):
+        transactions = []
+        reqdata = {}
+        if from_date:
+            reqdata["from_created_date"] = utils._date(from_date).isoformat()
+        if to_date:
+            reqdata["to_created_date"] = utils._date(to_date).isoformat()
+        data = self._get("orders", data=reqdata or None)
+        for txdat in data:
+            txn = Order(client=self, **txdat)
+            transactions.append(txn)
+        return transactions
+
 
 class _UpdateFromKwargsMixin(object):
     def _update(self, **kwargs):
