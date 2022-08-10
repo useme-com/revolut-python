@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import dateutil.parser
 from decimal import Decimal
+from datetime import datetime
 import json
 import logging
 import requests
@@ -229,17 +230,17 @@ class MerchantClient(utils._SetEnv):
     def orders(
         self, from_date=None, to_date=None
     ):
-        transactions = []
+        orders = []
         reqdata = {}
         if from_date:
-            reqdata["from_created_date"] = utils._date(from_date).isoformat()
+            reqdata["from_created_date"] = datetime.strptime(from_date, "yyyy-MM-dd'T'HH:mm:ssZ")
         if to_date:
-            reqdata["to_created_date"] = utils._date(to_date).isoformat()
+            reqdata["to_created_date"] = datetime.strptime(to_date, "yyyy-MM-dd'T'HH:mm:ssZ")
         data = self._get("orders", data=reqdata or None)
         for txdat in data:
             txn = Order(client=self, **txdat)
-            transactions.append(txn)
-        return transactions
+            orders.append(txn)
+        return orders
 
 
 class _UpdateFromKwargsMixin(object):
