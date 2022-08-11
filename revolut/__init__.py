@@ -205,7 +205,7 @@ class MerchantClient(utils._SetEnv):
         return result
 
     def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
+        path = "{}?{}".format(path, urlencode(data, safe=":")) if data is not None else path
         return self._request(requests.get, path)
 
     def _post(self, path, data=None):
@@ -236,15 +236,11 @@ class MerchantClient(utils._SetEnv):
             reqdata["from_created_date"] = utils._date(from_date).strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
         if to_date:
             reqdata["to_created_date"] = utils._date(to_date).strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
-        print(reqdata)
-        params = urlencode(reqdata, safe=":")
-        print(params)
-        data = self._get(f"orders?{params}")
+        data = self._get(path="orders", data=reqdata)
         for txdat in data:
             txn = Order(client=self, **txdat)
             orders.append(txn)
         return orders
-
 
     def order(self, order_id):
         data = self._get(f"orders/{order_id}")
