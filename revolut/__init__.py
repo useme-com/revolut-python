@@ -236,7 +236,9 @@ class MerchantClient(utils._SetEnv):
             reqdata["from_created_date"] = utils._date(from_date).strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
         if to_date:
             reqdata["to_created_date"] = utils._date(to_date).strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
+        print(reqdata)
         params = urlencode(reqdata, safe=":")
+        print(params)
         data = self._get(f"orders?{params}")
         for txdat in data:
             txn = Order(client=self, **txdat)
