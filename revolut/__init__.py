@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from cairo import Device
 
 import dateutil.parser
 from decimal import Decimal
@@ -597,7 +598,7 @@ class Order(_UpdateFromKwargsMixin):
     created_at = None
     updated_at = None
     capture_mode:str = ""
-    value:str = ""
+    value = Decimal(0)
     currency:str = ""
     order_amount = dict()
     order_outstanding_amount = dict()
