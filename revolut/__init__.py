@@ -600,9 +600,9 @@ class Order(_UpdateFromKwargsMixin):
     capture_mode:str = ""
     value = Decimal(0)
     currency:str = ""
-    order_amount = dict()
-    order_outstanding_amount = dict()
-    metadata = dict()
+    order_amount: str = ""
+    order_outstanding_amount: str = ""
+    metadata: str = ""
     customer_id:str = ""
     email:str = ""
 
