@@ -3,7 +3,6 @@ from cairo import Device
 
 import dateutil.parser
 from decimal import Decimal
-from datetime import datetime
 import json
 import logging
 import requests
@@ -234,14 +233,15 @@ class MerchantClient(utils._SetEnv):
         orders = []
         reqdata = {}
         if from_date:
-            reqdata["from_created_date"] = datetime.strptime(str(from_date), "yyyy-MM-dd'T'HH:mm:ssZ")
+            reqdata["?from_created_date"] = from_date.strftime("%y-%m-%dT%H:%M:%S.%f%z")
         if to_date:
-            reqdata["to_created_date"] = datetime.strptime(str(to_date), "yyyy-MM-dd'T'HH:mm:ssZ")
-        data = self._get("orders", data=reqdata or None)
+            reqdata["?to_created_date"] =  to_date.strftime("%y-%m-%dT%H:%M:%S.%f%z")
+        data = self._get(f"orders{urlencode(reqdata)}")
         for txdat in data:
             txn = Order(client=self, **txdat)
             orders.append(txn)
         return orders
+
 
     def order(self, order_id):
         data = self._get(f"orders/{order_id}")
