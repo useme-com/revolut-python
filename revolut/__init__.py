@@ -225,10 +225,10 @@ class _UpdateFromKwargsMixin(object):
 class Account(_UpdateFromKwargsMixin):
     client: Client
     id: Optional[str] = None
-    name: str = ""
-    currency: str = ""
+    name: Optional[str] = None
+    currency: Optional[str] = None
     balance: Decimal = Decimal(0)
-    state: str = ""
+    state: Optional[str] = None
     public: bool = False
     created_at = None
     updated_at = None
@@ -294,8 +294,6 @@ class Account(_UpdateFromKwargsMixin):
                     )
                 )
             receiver = {"counterparty_id": cpt.id}
-        if not receiver:
-            raise ValueError("Receiver cannot be empty")
         reqdata = {
             "request_id": request_id,
             "account_id": self.id,
@@ -325,12 +323,12 @@ class Account(_UpdateFromKwargsMixin):
 class Counterparty(_UpdateFromKwargsMixin):
     client: Client
     id: Optional[str] = None
-    name: str = ""
-    email: str = ""
-    phone: str = ""
-    profile_type: str = ""
-    country: str = ""
-    state: str = ""
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    profile_type: Optional[str] = None
+    country: Optional[str] = None
+    state: Optional[str] = None
     created_at = None
     updated_at = None
     accounts: Optional[dict] = None
@@ -340,14 +338,14 @@ class Counterparty(_UpdateFromKwargsMixin):
         self._update(**kwargs)
 
     def __repr__(self):
-        return "<Counterparty {}>".format(self.id)
+        return "<Counterparty {}>".format(self.id or "")
 
     def __str__(self):
         return "Id: {} {} {} {}".format(
             self.id or "NO ID",
-            self.profile_type,
-            self.name,
-            self.email if self.profile_type == "business" else self.phone,
+            self.profile_type or "",
+            self.name or "",
+            self.email if self.profile_type == "business" else self.phone or "",
         ).strip()
 
     def _update(self, **kwargs):
@@ -401,7 +399,7 @@ class Counterparty(_UpdateFromKwargsMixin):
             raise ValueError("{} doesn't have an ID. Cannot delete.".format(self))
         self.client._delete("counterparty/{}".format(self.id))
         del self.client._counterparties[self.id]  # type: ignore
-        self.id = ""
+        self.id = None
 
 
 class ExternalCounterparty(_UpdateFromKwargsMixin):
@@ -411,17 +409,17 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
 
     id: Optional[str] = None
     client: Client
-    account_no: str = ""
-    email: str = ""
-    phone: str = ""
-    company_name: str = ""
+    account_no: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    company_name: Optional[str] = None
     individual_name: Optional[dict] = None
-    bank_country: str = ""
-    currency: str = ""
-    phone: str = ""
-    address: str = ""
-    iban: str = ""
-    bic: str = ""
+    bank_country: Optional[str] = None
+    currency: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    iban: Optional[str] = None
+    bic: Optional[str] = None
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -477,8 +475,8 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
 
 class CounterpartyAccount(_UpdateFromKwargsMixin):
     id: Optional[str] = None
-    name: str = ""
-    currency: str = ""
+    name: Optional[str] = None
+    currency: Optional[str] = None
 
     def __init__(self, **kwargs):
         self._check_type(kwargs.pop("type"))
@@ -492,15 +490,15 @@ class CounterpartyAccount(_UpdateFromKwargsMixin):
 
 
 class CounterpartyExternalAccount(CounterpartyAccount):
-    account_no: str = ""
-    iban: str = ""
-    sort_code: str = ""
-    routing_number: str = ""
-    bic: str = ""
-    email: str = ""
-    bank_country: str = ""
-    recipient_charges: str = ""
-    bsb_code: str = ""
+    account_no: Optional[str] = None
+    iban: Optional[str] = None
+    sort_code: Optional[str] = None
+    routing_number: Optional[str] = None
+    bic: Optional[str] = None
+    email: Optional[str] = None
+    bank_country: Optional[str] = None
+    recipient_charges: Optional[str] = None
+    bsb_code: Optional[str] = None
 
     def __repr__(self):
         return "<CounterpartyExternalAccount {}>".format(self.id)
@@ -512,15 +510,15 @@ class CounterpartyExternalAccount(CounterpartyAccount):
 class Transaction(_UpdateFromKwargsMixin):
     id: Optional[str] = None
     client: Client
-    type: str = ""
-    state: str = ""
-    reason_code: str = ""
+    type: Optional[str] = None
+    state: Optional[str] = None
+    reason_code: Optional[str] = None
     created_at = None
     completed_at = None
     updated_at = None
     legs: Optional[list] = None
-    request_id: str = ""
-    reference: str = ""
+    request_id: Optional[str] = None
+    reference: Optional[str] = None
     revertable: bool = False
 
     def __init__(self, **kwargs):

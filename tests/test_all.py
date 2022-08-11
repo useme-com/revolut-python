@@ -172,7 +172,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             )
         for cptid, cpt in counterparties:
             cpt.delete()
-            self.assertFalse(cpt.id)
+            self.assertIsNone(cpt.id)
             self.assertRaises(ValueError, cpt.delete)
             self.assertNotIn(cptid, cli.counterparties)
 
@@ -351,7 +351,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         self.assertEqual(cpt.id, cpt_id)
         self.assertIsInstance(ncpt, Counterparty)
         self.assertEqual(repr(ncpt), "<Counterparty {}>".format(cpt_id))
-        self.assertEqual(ncpt.profile_type, "")
+        self.assertIsNone(ncpt.profile_type)
         self.assertEqual(
             str(ncpt), "Id: d7d28bee-d895-4e14-a212-813babffdd8f  Kogucik S.A."
         )
