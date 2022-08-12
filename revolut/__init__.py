@@ -588,5 +588,5 @@ class Order(_UpdateFromKwargsMixin):
         self.updated_at = (
             dateutil.parser.parse(self.updated_at) if self.updated_at else None
         )
-        self.value = "{:.2f}".format(Decimal(self.order_amount["value"]/100)) if self.order_amount else ""
+        self.value = utils._integertomoney(self.order_amount["value"]) if self.order_amount else ""
         self.currency = self.order_amount["currency"] if self.order_amount else ""

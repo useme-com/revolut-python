@@ -34,6 +34,8 @@ def _datetime(v):
         return v.date()
     return v.strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
 
+def _integertomoney(value_int):
+    return (Decimal(value_int) / Decimal(100)).quantize(Decimal("0.01"))
 
 class _SetEnv(object):
     def _set_env(self, token):
