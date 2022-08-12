@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from lib2to3.pytree import Base
 from cairo import Device
 
 import dateutil.parser
@@ -19,23 +20,10 @@ __version__ = "0.8.6"
 _log = logging.getLogger(__name__)
 
 
-class Client(utils._SetEnv):
-    live = False
-    timeout = 10
-    _requester = None  # requests.Session()
+class BaseClient(utils._SetEnv):
     _session = None
-    _accounts = None
-    _counterparties = None
-    _cptbyaccount = None
-
-    def __init__(self, session, timeout=None):
-        self._set_env(session.access_token)
-        self._session = session
-        self.timeout = timeout
-        self._requester = requests.Session()
-        self._requester.headers.update(
-            {"Authorization": "Bearer {}".format(self._session.access_token)}
-        )
+    _requester = None  # requests.Session()
+    timeout = 10
 
     def _request(self, func, path, data=None):
         url = urljoin(self.base_url, path)
@@ -81,9 +69,9 @@ class Client(utils._SetEnv):
             )
             _log.debug("Result:\n{result}".format(result=_ppresult))
         return result
-
+    
     def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
+        path = "{}?{}".format(path, urlencode(data, safe=":")) if data is not None else path
         return self._request(self._requester.get, path)
 
     def _post(self, path, data=None):
@@ -91,6 +79,22 @@ class Client(utils._SetEnv):
 
     def _delete(self, path, data=None):
         return self._request(self._requester.delete, path, data or {})
+
+
+class Client(BaseClient):
+    live = False
+    _accounts = None
+    _counterparties = None
+    _cptbyaccount = None
+
+    def __init__(self, session, timeout=None):
+        self._set_env(session.access_token)
+        self._session = session
+        self.timeout = timeout
+        self._requester = requests.Session()
+        self._requester.headers.update(
+            {"Authorization": "Bearer {}".format(self._session.access_token)}
+        )
 
     @property
     def accounts(self):
@@ -167,52 +171,15 @@ class Client(utils._SetEnv):
     # TODO: def transaction_by_request_id(self, request_id):
 
 
-class MerchantClient(utils._SetEnv):
-    _session = None
-
-    def __init__(self, session):
+class MerchantClient(BaseClient):
+    def __init__(self, session, timeout=None):
         self._set_env(session.access_token)
         self._session = session
-
-    def _request(self, func, path, data=None):
-        url = urljoin(self.base_url, path)
-        hdr = {"Authorization": "Bearer {}".format(self._session._access_token)}
-        _log.debug("{}".format(path))
-        if data is not None:
-            _log.debug(
-                "data: {}".format(
-                    json.dumps(
-                        data, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
-                    )
-                )
-            )
-        rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
-        if rsp.status_code == 204:
-            result = None
-        else:
-            result = rsp.json(parse_float=Decimal)
-        if rsp.status_code < 200 or rsp.status_code >= 300:
-            message = result.get("message", "No message supplied")
-            _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
-            if rsp.status_code == 401:
-                raise exceptions.Unauthorized(rsp.status_code, message)
-            raise exceptions.RevolutHttpError(rsp.status_code, message)
-        if result:
-            _ppresult = json.dumps(
-                result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
-            )
-            _log.debug("Result:\n{result}".format(result=_ppresult))
-        return result
-
-    def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data, safe=":")) if data is not None else path
-        return self._request(requests.get, path)
-
-    def _post(self, path, data=None):
-        return self._request(requests.post, path, data or {})
-
-    def _delete(self, path, data=None):
-        return self._request(requests.delete, path, data or {})
+        self.timeout = timeout
+        self._requester = requests.Session()
+        self._requester.headers.update(
+            {"Authorization": "Bearer {}".format(self._session._access_token)}
+        )
 
     def create_order(
         self, amount, currency, token
