@@ -45,8 +45,9 @@ class _SetEnv(object):
         elif token.startswith("oa_sand"):
             self.base_url = "https://sandbox-b2b.revolut.com/api/1.0/"
             self.live = False
-        # TODO: Check differece between sand and prod access token to merchant
-        elif token.startswith("sk"):
+        elif token.startswith("sk_y"):
+            self.base_url = "https://merchant.revolut.com/api/1.0/"
+        elif token.startswith("sk_q"):
             self.base_url = "https://sandbox-merchant.revolut.com/api/1.0/"
         else:
             raise ValueError(
