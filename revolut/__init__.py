@@ -233,9 +233,9 @@ class MerchantClient(utils._SetEnv):
         orders = []
         reqdata = {}
         if from_date:
-            reqdata["from_created_date"] = utils._date(from_date).strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
+            reqdata["from_created_date"] = utils._datetime(from_date)
         if to_date:
-            reqdata["to_created_date"] = utils._date(to_date).strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
+            reqdata["to_created_date"] = utils._datetime(to_date)
         data = self._get(path="orders", data=reqdata)
         for txdat in data:
             txn = Order(client=self, **txdat)

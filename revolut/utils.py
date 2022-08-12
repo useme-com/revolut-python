@@ -27,6 +27,13 @@ def _date(v):
         return v.date()
     return v
 
+def _datetime(v):
+    if not isinstance(v, (datetime.date, datetime.datetime)):
+        return dateutil.parser.parse(v).date().strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
+    elif isinstance(v, datetime.datetime):
+        return v.date().strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
+    return v
+
 
 class _SetEnv(object):
     def _set_env(self, token):
