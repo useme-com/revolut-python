@@ -574,7 +574,8 @@ class Order(_UpdateFromKwargsMixin):
     email:str = ""
     completed_at = None
     refunded_amount: str = ""
-
+    payments: str = ""
+    
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
         self._update(**kwargs)
