@@ -572,7 +572,8 @@ class Order(_UpdateFromKwargsMixin):
     metadata: str = ""
     customer_id:str = ""
     email:str = ""
-    completed_at: str = ""
+    completed_at = None
+    refunded_amount: str = ""
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
