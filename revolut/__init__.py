@@ -214,6 +214,13 @@ class MerchantClient(BaseClient):
         data = self._get(f"orders/{order_id}")
         return Order(client=self, **data)
 
+    def webhook(self, url, events):
+        reqdata = {}
+        if url:
+            reqdata["url"] = url
+        if events:
+            reqdata["events"] = events
+        data = self._post(f"webhooks", data=reqdata)
 
 class _UpdateFromKwargsMixin(object):
     def _update(self, **kwargs):
@@ -572,7 +579,7 @@ class Order(_UpdateFromKwargsMixin):
     metadata: str = ""
     customer_id:str = ""
     email:str = ""
-    completed_at = None
+    completed_at: str = ""
     refunded_amount: str = ""
     payments: str = ""
     
