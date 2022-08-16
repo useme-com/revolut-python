@@ -582,7 +582,7 @@ class Order(_UpdateFromKwargsMixin):
     completed_at: str = ""
     refunded_amount: str = ""
     payments: str = ""
-    
+
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
         self._update(**kwargs)
@@ -597,9 +597,6 @@ class Order(_UpdateFromKwargsMixin):
         )
         self.updated_at = (
             dateutil.parser.parse(self.updated_at) if self.updated_at else None
-        )
-        self.completed_at = (
-            dateutil.parser.parse(self.completed_at) if self.completed_at else None
         )
         self.value = utils._integertomoney(self.order_amount["value"]) if self.order_amount else ""
         self.currency = self.order_amount["currency"] if self.order_amount else ""
