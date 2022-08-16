@@ -579,7 +579,7 @@ class Order(_UpdateFromKwargsMixin):
     metadata: str = ""
     customer_id:str = ""
     email:str = ""
-    completed_at: str = ""
+    completed_at = None
     refunded_amount: str = ""
     payments: str = ""
 
@@ -597,6 +597,9 @@ class Order(_UpdateFromKwargsMixin):
         )
         self.updated_at = (
             dateutil.parser.parse(self.updated_at) if self.updated_at else None
+        )
+        self.completed_at = (
+            dateutil.parser.parse(self.completed_at) if self.completed_at else None
         )
         self.value = utils._integertomoney(self.order_amount["value"]) if self.order_amount else ""
         self.currency = self.order_amount["currency"] if self.order_amount else ""
