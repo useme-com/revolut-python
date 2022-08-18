@@ -209,11 +209,6 @@ class MerchantClient(BaseClient):
             orders.append(txn)
         return orders
 
-
-    def order(self, order_id):
-        data = self._get(f"orders/{order_id}")
-        return Order(client=self, **data)
-
     def webhook(self, url, events):
         reqdata = {}
         if url:
