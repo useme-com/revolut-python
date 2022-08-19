@@ -34,15 +34,6 @@ def _datetime(v):
     return v.strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
 
 
-def _datetime(v):
-    def _format(date):
-        return date.strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
-    if not isinstance(v, (datetime.date, datetime.datetime)):
-        date = dateutil.parser.parse(v).date()
-    elif isinstance(v, datetime.datetime):
-        date = v.date()
-    return _format(date) if date else _format(v)
-
 def _integertomoney(value_int):
     return (Decimal(value_int) / Decimal(100)).quantize(Decimal("0.01"))
 
