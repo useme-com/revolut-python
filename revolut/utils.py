@@ -30,9 +30,9 @@ def _date(v):
 def _datetime(v):
     print(f"Input value: {v}, input format {type(v)}")
     if not isinstance(v, (datetime.date, datetime.datetime)):
-        return dateutil.parser.parse(v).date()
+        return dateutil.parser.parse(v).date().strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
     elif isinstance(v, datetime.datetime):
-        return v.date()
+        return v.date().strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
     return v.strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
 
 def _integertomoney(value_int):
