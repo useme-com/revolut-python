@@ -28,7 +28,6 @@ def _date(v):
     return v
 
 def _datetime(v):
-    print(f"Input value: {v}, input format {type(v)}")
     if not isinstance(v, (datetime.date, datetime.datetime)):
         return dateutil.parser.parse(v).date().strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
     elif isinstance(v, datetime.datetime):
