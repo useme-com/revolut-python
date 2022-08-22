@@ -182,11 +182,12 @@ class MerchantClient(BaseClient):
         )
 
     def get_or_create_order(
-        self, amount, currency, token, order_id=None
+        self, amount, currency, token, order_id
     ):
         order = self.get_order(order_id)
-        if order is not None:
-            return order
+        return order or self.create_order(amount, currency, token)
+
+    def create_order(self, amount, currency, token):
         data = self._post("orders", data={"amount": amount, "currency": currency, "merchant_order_ext_ref": token} or None)
         return Order(client=self, **data)
 
