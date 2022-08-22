@@ -181,24 +181,23 @@ class MerchantClient(BaseClient):
             {"Authorization": "Bearer {}".format(self._session._access_token)}
         )
 
-    def create_order(
-        self, amount, currency, token
+    def get_or_create_order(
+        order_id, self, amount, currency, token
     ):
-        reqdata = {}
-        if amount:
-            reqdata["amount"] = amount
-        if currency:
-            reqdata["currency"] = currency
-        if token:
-            reqdata["merchant_order_ext_ref"] = token
-        data = self._post("orders", data=reqdata or None)
+        order = self.get_order(order_id)
+        if order:
+            return order
+        data = self._post("orders", data={"amount": amount, "currency": currency, "merchant_order_ext_ref": token} or None)
         return Order(client=self, **data)
 
     def get_order(
         self, order_id
     ):
-        data = self._get(f"orders/{order_id}")
-        return Order(client=self, **data)
+        try:
+            data = self._get(f"orders/{order_id}")
+            return Order(client=self, **data)
+        except Exception:
+            return None
     
     def orders(
         self, from_date=None, to_date=None
