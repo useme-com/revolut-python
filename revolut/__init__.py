@@ -194,6 +194,12 @@ class MerchantClient(BaseClient):
         data = self._post("orders", data=reqdata or None)
         return Order(client=self, **data)
 
+    def get_order(
+        self, order_id
+    ):
+        data = self._get(f"orders/{order_id}")
+        return Order(client=self, **data)
+    
     def orders(
         self, from_date=None, to_date=None
     ):
