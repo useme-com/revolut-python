@@ -1,31 +1,26 @@
-from __future__ import unicode_literals
-
 import dateutil.parser
 from decimal import Decimal
 import json
 import logging
 import requests
-
-try:  # pragma: nocover
-    from urllib.parse import urljoin, urlencode  # 3.x
-except ImportError:  # pragma: nocover
-    from urlparse import urljoin  # 2.x
-    from urllib import urlencode
+from urllib.parse import urljoin, urlencode
 from . import exceptions, utils
+from .session import BaseSession
+from typing import Optional
 
-__version__ = "0.8.6"
+__version__ = "0.9"
 
 _log = logging.getLogger(__name__)
 
 
 class Client(utils._SetEnv):
-    live = False
-    timeout = 10
-    _requester = None  # requests.Session()
-    _session = None
-    _accounts = None
-    _counterparties = None
-    _cptbyaccount = None
+    _requester: requests.Session
+    _session: BaseSession
+    live: bool = False
+    timeout: Optional[int] = 10
+    _accounts: Optional[dict] = None
+    _counterparties: Optional[dict] = None
+    _cptbyaccount: Optional[dict] = None
 
     def __init__(self, session, timeout=None):
         self._set_env(session.access_token)
@@ -48,12 +43,11 @@ class Client(utils._SetEnv):
                 )
             )
         rsp = func(url, data=json.dumps(data) if data else None, timeout=self.timeout)
-        if rsp.status_code == 204:
-            result = None
-        else:
+        result = None
+        if rsp.status_code != 204:
             result = rsp.json(parse_float=Decimal)
         if rsp.status_code < 200 or rsp.status_code >= 300:
-            message = result.get("message", "No message supplied")
+            message = getattr(result, "message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
             if rsp.status_code == 400:
                 if "o pocket found" in message:
@@ -82,7 +76,7 @@ class Client(utils._SetEnv):
         return result
 
     def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
+        path = "{}?{}".format(path, urlencode(data)) if data else path
         return self._request(self._requester.get, path)
 
     def _post(self, path, data=None):
@@ -113,14 +107,14 @@ class Client(utils._SetEnv):
         for cptdat in data:
             cpt = Counterparty(client=self, **cptdat)
             _counterparties[cpt.id] = cpt
-            for cptaccid in cpt.accounts.keys():
+            for cptaccid in cpt.accounts.keys():  # type: ignore
                 _cptbyaccount[cptaccid] = cpt
         self._counterparties = _counterparties
         self._cptbyaccount = _cptbyaccount
         return self._counterparties
 
     def _refresh_counterparties(self):
-        self._counterparties = self._cptbyaccount = None
+        self._counterparties = self._cptbyaccount = {}
         _ = self.counterparties
 
     def transactions(
@@ -166,6 +160,58 @@ class Client(utils._SetEnv):
     # TODO: def transaction_by_request_id(self, request_id):
 
 
+class MerchantClient(utils._SetEnv):
+    _session: BaseSession
+
+    def __init__(self, session):
+        self._set_env(session.access_token)
+        self._session = session
+
+    def _request(self, func, path, data=None):
+        url = urljoin(self.base_url, path)
+        hdr = {"Authorization": "Bearer {}".format(self._session._access_token)}
+        _log.debug("{}".format(path))
+        if data is not None:
+            _log.debug(
+                "data: {}".format(
+                    json.dumps(
+                        data, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
+                    )
+                )
+            )
+        rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
+        result = None
+        if rsp.status_code != 204:
+            result = rsp.json(parse_float=Decimal)
+        if rsp.status_code < 200 or rsp.status_code >= 300:
+            message = getattr(result, "message", "No message supplied")
+            _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
+            if rsp.status_code == 401:
+                raise exceptions.Unauthorized(rsp.status_code, message)
+            raise exceptions.RevolutHttpError(rsp.status_code, message)
+        if result:
+            _ppresult = json.dumps(
+                result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
+            )
+            _log.debug("Result:\n{result}".format(result=_ppresult))
+        return result
+
+    def _get(self, path, data=None):
+        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
+        return self._request(requests.get, path)
+
+    def _post(self, path, data=None):
+        return self._request(requests.post, path, data or {})
+
+    def _delete(self, path, data=None):
+        return self._request(requests.delete, path, data or {})
+
+    def create_order(self, amount, currency):
+        data = {"amount": amount, "currency": currency}
+        data = self._post("orders", data=data)
+        return data
+
+
 class _UpdateFromKwargsMixin(object):
     def _update(self, **kwargs):
         for k, v in kwargs.items():
@@ -177,13 +223,13 @@ class _UpdateFromKwargsMixin(object):
 
 
 class Account(_UpdateFromKwargsMixin):
-    client = None
-    id = ""
-    name = ""
-    currency = ""
-    balance = Decimal(0)
-    state = ""
-    public = False
+    client: Client
+    id: Optional[str] = None
+    name: Optional[str] = None
+    currency: Optional[str] = None
+    balance: Decimal = Decimal(0)
+    state: Optional[str] = None
+    public: bool = False
     created_at = None
     updated_at = None
 
@@ -193,8 +239,12 @@ class Account(_UpdateFromKwargsMixin):
 
     def _update(self, **kwargs):
         super(Account, self)._update(**kwargs)
-        self.created_at = dateutil.parser.parse(self.created_at)
-        self.updated_at = dateutil.parser.parse(self.updated_at)
+        self.created_at = (
+            dateutil.parser.parse(self.created_at) if self.created_at else None
+        )
+        self.updated_at = (
+            dateutil.parser.parse(self.updated_at) if self.updated_at else None
+        )
         self.balance = Decimal(self.balance)
 
     def __repr__(self):
@@ -222,9 +272,9 @@ class Account(_UpdateFromKwargsMixin):
         ):
             return self._transfer_internal(destid, amount, request_id, reference)
         _ = self.client.counterparties  # NOTE: make sure counterparties are loaded
-        cpt = None
+        cpt, receiver = None, {}
         try:
-            cpt = self.client._cptbyaccount[destid]
+            cpt = self.client._cptbyaccount[destid]  # type: ignore
             if cpt.accounts[destid].currency != currency:
                 raise exceptions.CurrencyMismatch(
                     "Currency {} does not match the destination currency: {}".format(
@@ -271,31 +321,31 @@ class Account(_UpdateFromKwargsMixin):
 
 
 class Counterparty(_UpdateFromKwargsMixin):
-    client = None
-    id = None
-    name = ""
-    email = ""
-    phone = ""
-    profile_type = ""
-    country = ""
-    state = ""
+    client: Client
+    id: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    profile_type: Optional[str] = None
+    country: Optional[str] = None
+    state: Optional[str] = None
     created_at = None
     updated_at = None
-    accounts = None
+    accounts: Optional[dict] = None
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
         self._update(**kwargs)
 
     def __repr__(self):
-        return "<Counterparty {}>".format(self.id)
+        return "<Counterparty {}>".format(self.id or "")
 
     def __str__(self):
         return "Id: {} {} {} {}".format(
             self.id or "NO ID",
-            self.profile_type,
-            self.name,
-            self.email if self.profile_type == "business" else self.phone,
+            self.profile_type or "",
+            self.name or "",
+            self.email if self.profile_type == "business" else self.phone or "",
         ).strip()
 
     def _update(self, **kwargs):
@@ -322,7 +372,7 @@ class Counterparty(_UpdateFromKwargsMixin):
         return self
 
     def save(self):
-        if self.id is not None:
+        if self.id:
             raise exceptions.CounterpartyAlreadyExists(
                 "The object's ID is set. It has been saved already."
             )
@@ -348,7 +398,7 @@ class Counterparty(_UpdateFromKwargsMixin):
         if not self.id:
             raise ValueError("{} doesn't have an ID. Cannot delete.".format(self))
         self.client._delete("counterparty/{}".format(self.id))
-        del self.client._counterparties[self.id]
+        del self.client._counterparties[self.id]  # type: ignore
         self.id = None
 
 
@@ -357,18 +407,19 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
     create such counterparties. The `.save()` method will return the resulting `Counterparty`
     object and the original `ExternalCounterparty` should be discarded afterwards."""
 
-    id = None
-    client = None
-    email = ""
-    phone = ""
-    company_name = ""
-    individual_name = None
-    bank_country = ""
-    currency = None
-    phone = ""
-    address = None
-    iban = None
-    bic = None
+    id: Optional[str] = None
+    client: Client
+    account_no: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    company_name: Optional[str] = None
+    individual_name: Optional[dict] = None
+    bank_country: Optional[str] = None
+    currency: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    iban: Optional[str] = None
+    bic: Optional[str] = None
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -386,7 +437,7 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
         )
 
     def save(self):
-        if self.id is not None:
+        if self.id:
             raise exceptions.CounterpartyAlreadyExists(
                 "The object's ID is set. It has been saved already."
             )
@@ -423,9 +474,9 @@ class ExternalCounterparty(_UpdateFromKwargsMixin):
 
 
 class CounterpartyAccount(_UpdateFromKwargsMixin):
-    id = None
-    name = ""
-    currency = ""
+    id: Optional[str] = None
+    name: Optional[str] = None
+    currency: Optional[str] = None
 
     def __init__(self, **kwargs):
         self._check_type(kwargs.pop("type"))
@@ -439,15 +490,15 @@ class CounterpartyAccount(_UpdateFromKwargsMixin):
 
 
 class CounterpartyExternalAccount(CounterpartyAccount):
-    account_no = ""
-    iban = ""
-    sort_code = ""
-    routing_number = ""
-    bic = ""
-    email = ""
-    bank_country = ""
-    recipient_charges = ""
-    bsb_code = ""
+    account_no: Optional[str] = None
+    iban: Optional[str] = None
+    sort_code: Optional[str] = None
+    routing_number: Optional[str] = None
+    bic: Optional[str] = None
+    email: Optional[str] = None
+    bank_country: Optional[str] = None
+    recipient_charges: Optional[str] = None
+    bsb_code: Optional[str] = None
 
     def __repr__(self):
         return "<CounterpartyExternalAccount {}>".format(self.id)
@@ -457,20 +508,18 @@ class CounterpartyExternalAccount(CounterpartyAccount):
 
 
 class Transaction(_UpdateFromKwargsMixin):
-    id = None
-    client = None
-    type = ""
-    state = ""
-    reason_code = ""
+    id: Optional[str] = None
+    client: Client
+    type: Optional[str] = None
+    state: Optional[str] = None
+    reason_code: Optional[str] = None
     created_at = None
     completed_at = None
     updated_at = None
-    legs = None
-    request_id = None
-    reference = None
-    merchant = None
-    card = None
-    revertable = False
+    legs: Optional[list] = None
+    request_id: Optional[str] = None
+    reference: Optional[str] = None
+    revertable: bool = False
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
@@ -482,10 +531,10 @@ class Transaction(_UpdateFromKwargsMixin):
 
     @property
     def direction(self):
-        if len(self.legs) == 2:
+        if len(self.legs) == 2:  # type: ignore
             return "both"
         else:
-            if self.legs[0]["amount"] < 0:
+            if self.legs[0]["amount"] < 0:  # type: ignore
                 return "out"
             else:
                 return "in"

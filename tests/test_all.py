@@ -334,7 +334,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         cli = Client(tssn)
         cpt = ExternalCounterparty(
             client=cli,
-            company_name=u"Kogucik S.A.",
+            company_name="Kogucik S.A.",
             bank_country="PL",
             currency="PLN",
             phone="+48123456789",
@@ -355,7 +355,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         self.assertEqual(cpt.id, cpt_id)
         self.assertIsInstance(ncpt, Counterparty)
         self.assertEqual(repr(ncpt), "<Counterparty {}>".format(cpt_id))
-        self.assertEqual(ncpt.profile_type, "")
+        self.assertIsNone(ncpt.profile_type)
         self.assertEqual(
             str(ncpt), "Id: d7d28bee-d895-4e14-a212-813babffdd8f  Kogucik S.A."
         )
