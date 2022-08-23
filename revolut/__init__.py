@@ -13,23 +13,10 @@ __version__ = "0.9"
 _log = logging.getLogger(__name__)
 
 
-class Client(utils._SetEnv):
-    _requester: requests.Session
-    _session: BaseSession
-    live: bool = False
-    timeout: Optional[int] = 10
-    _accounts: Optional[dict] = None
-    _counterparties: Optional[dict] = None
-    _cptbyaccount: Optional[dict] = None
-
-    def __init__(self, session, timeout=None):
-        self._set_env(session.access_token)
-        self._session = session
-        self.timeout = timeout
-        self._requester = requests.Session()
-        self._requester.headers.update(
-            {"Authorization": "Bearer {}".format(self._session.access_token)}
-        )
+class BaseClient(utils._SetEnv):
+    _session = None
+    _requester = None  # requests.Session()
+    timeout = 10
 
     def _request(self, func, path, data=None):
         url = urljoin(self.base_url, path)
@@ -60,6 +47,16 @@ class Client(utils._SetEnv):
                     raise exceptions.MissingFields(message)
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
+            if rsp.status_code == 403:
+                raise exceptions.Forbidden(rsp.status_code, message)
+            if rsp.status_code == 404:
+                raise exceptions.NotFound(rsp.status_codde, message)
+            if rsp.status_code == 405:
+                raise exceptions.MethodNotAllowed(rsp.status_code, message)
+            if rsp.status_code == 406:
+                raise exceptions.NotAccaptable(rsp.status_code, message)
+            if rsp.status_code == 409:
+                raise exceptions.RequestConflict(rsp.status_code, message)
             if rsp.status_code == 422:
                 if "nsufficient balance" in message:
                     raise exceptions.InsufficientBalance(message)
@@ -67,6 +64,12 @@ class Client(utils._SetEnv):
                     raise exceptions.CounterpartyAddressRequired(message)
                 elif "ounterparty already exists" in message:
                     raise exceptions.CounterpartyAlreadyExists(message)
+            if rsp.status_code == 429:
+                raise exceptions.TooManyRequests(rsp.status_code, message)
+            if rsp.status_code == 500:
+                raise exceptions.InternalServerError(rsp.status_code, message)
+            if rsp.status_code == 503:
+                raise exceptions.ServiceUnavailable(rsp.status_code, message)
             raise exceptions.RevolutHttpError(rsp.status_code, message)
         if result:
             _ppresult = json.dumps(
@@ -76,7 +79,11 @@ class Client(utils._SetEnv):
         return result
 
     def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data)) if data else path
+        path = (
+            "{}?{}".format(path, urlencode(data, safe=":"))
+            if data is not None
+            else path
+        )
         return self._request(self._requester.get, path)
 
     def _post(self, path, data=None):
@@ -84,6 +91,22 @@ class Client(utils._SetEnv):
 
     def _delete(self, path, data=None):
         return self._request(self._requester.delete, path, data or {})
+
+
+class Client(BaseClient):
+    live = False
+    _accounts = None
+    _counterparties = None
+    _cptbyaccount = None
+
+    def __init__(self, session, timeout=None):
+        self._set_env(session.access_token)
+        self._session = session
+        self.timeout = timeout
+        self._requester = requests.Session()
+        self._requester.headers.update(
+            {"Authorization": "Bearer {}".format(self._session.access_token)}
+        )
 
     @property
     def accounts(self):
@@ -160,56 +183,59 @@ class Client(utils._SetEnv):
     # TODO: def transaction_by_request_id(self, request_id):
 
 
-class MerchantClient(utils._SetEnv):
-    _session: BaseSession
-
-    def __init__(self, session):
+class MerchantClient(BaseClient):
+    def __init__(self, session, timeout=None):
         self._set_env(session.access_token)
         self._session = session
+        self.timeout = timeout
+        self._requester = requests.Session()
+        self._requester.headers.update(
+            {"Authorization": "Bearer {}".format(self._session._access_token)}
+        )
 
-    def _request(self, func, path, data=None):
-        url = urljoin(self.base_url, path)
-        hdr = {"Authorization": "Bearer {}".format(self._session._access_token)}
-        _log.debug("{}".format(path))
-        if data is not None:
-            _log.debug(
-                "data: {}".format(
-                    json.dumps(
-                        data, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
-                    )
-                )
-            )
-        rsp = func(url, headers=hdr, data=json.dumps(data) if data else None)
-        result = None
-        if rsp.status_code != 204:
-            result = rsp.json(parse_float=Decimal)
-        if rsp.status_code < 200 or rsp.status_code >= 300:
-            message = getattr(result, "message", "No message supplied")
-            _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
-            if rsp.status_code == 401:
-                raise exceptions.Unauthorized(rsp.status_code, message)
-            raise exceptions.RevolutHttpError(rsp.status_code, message)
-        if result:
-            _ppresult = json.dumps(
-                result, cls=utils.JSONWithDecimalEncoder, indent=2, sort_keys=True
-            )
-            _log.debug("Result:\n{result}".format(result=_ppresult))
-        return result
+    def get_or_create_order(self, amount, currency, token, order_id):
+        order = self.get_order(order_id)
+        return order or self.create_order(amount, currency, token)
 
-    def _get(self, path, data=None):
-        path = "{}?{}".format(path, urlencode(data)) if data is not None else path
-        return self._request(requests.get, path)
+    def create_order(self, amount, currency, token):
+        data = self._post(
+            "orders",
+            data={
+                "amount": amount,
+                "currency": currency,
+                "merchant_order_ext_ref": token,
+            }
+            or None,
+        )
+        return Order(client=self, **data)
 
-    def _post(self, path, data=None):
-        return self._request(requests.post, path, data or {})
+    def get_order(self, order_id):
+        try:
+            data = self._get(f"orders/{order_id}")
+            return Order(client=self, **data)
+        except Exception:
+            return None
 
-    def _delete(self, path, data=None):
-        return self._request(requests.delete, path, data or {})
+    def orders(self, from_date=None, to_date=None):
+        orders = []
+        reqdata = {}
+        if from_date:
+            reqdata["from_created_date"] = utils._datetime(from_date)
+        if to_date:
+            reqdata["to_created_date"] = utils._datetime(to_date)
+        data = self._get(path="orders", data=reqdata)
+        for txdat in data:
+            txn = Order(client=self, **txdat)
+            orders.append(txn)
+        return orders
 
-    def create_order(self, amount, currency):
-        data = {"amount": amount, "currency": currency}
-        data = self._post("orders", data=data)
-        return data
+    def webhook(self, url, events):
+        reqdata = {}
+        if url:
+            reqdata["url"] = url
+        if events:
+            reqdata["events"] = events
+        data = self._post(f"webhooks", data=reqdata)
 
 
 class _UpdateFromKwargsMixin(object):
@@ -553,3 +579,50 @@ class Transaction(_UpdateFromKwargsMixin):
         self.completed_at = (
             dateutil.parser.parse(self.completed_at) if self.completed_at else None
         )
+
+
+class Order(_UpdateFromKwargsMixin):
+    id: str = ""
+    client = None
+    public_id: str = ""
+    merchant_order_ext_ref: str = ""
+    type: str = ""
+    state: str = ""
+    created_at = None
+    updated_at = None
+    capture_mode: str = ""
+    value = Decimal(0)
+    currency: str = ""
+    order_amount: str = ""
+    order_outstanding_amount: str = ""
+    metadata: str = ""
+    customer_id: str = ""
+    email: str = ""
+    completed_at: str = ""
+    refunded_amount: str = ""
+    payments: str = ""
+
+    def __init__(self, **kwargs):
+        self.client = kwargs.pop("client")
+        self._update(**kwargs)
+
+    def __repr__(self):
+        return f"<Order {self.id}>"
+
+    def _update(self, **kwargs):
+        super(Order, self)._update(**kwargs)
+        self.created_at = (
+            dateutil.parser.parse(self.created_at) if self.created_at else None
+        )
+        self.updated_at = (
+            dateutil.parser.parse(self.updated_at) if self.updated_at else None
+        )
+        self.completed_at = (
+            dateutil.parser.parse(self.completed_at) if self.completed_at else ""
+        )
+        self.value = (
+            utils._integertomoney(self.order_amount["value"])
+            if self.order_amount
+            else ""
+        )
+        self.currency = self.order_amount["currency"] if self.order_amount else ""
