@@ -31,11 +31,12 @@ def _date(v):
 def _datetime(v):
     if not isinstance(v, (datetime.date, datetime.datetime)):
         v = datetime.date.fromisoformat(v)
-    return v.strftime('%Y-%m-%dT%H:%M:%S.%f%zZ')
+    return v.strftime("%Y-%m-%dT%H:%M:%S.%f%zZ")
 
 
 def _integertomoney(value_int):
     return (Decimal(value_int) / Decimal(100)).quantize(Decimal("0.01"))
+
 
 class _SetEnv(object):
     def _set_env(self, token):

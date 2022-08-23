@@ -50,7 +50,7 @@ class BaseClient(utils._SetEnv):
             if rsp.status_code == 403:
                 raise exceptions.Forbidden(rsp.status_code, message)
             if rsp.status_code == 404:
-                raise exceptions.NotFound(rsp.status_codde, message)
+                raise exceptions.NotFound(rsp.status_code, message)
             if rsp.status_code == 405:
                 raise exceptions.MethodNotAllowed(rsp.status_code, message)
             if rsp.status_code == 406:
@@ -93,7 +93,7 @@ class BaseClient(utils._SetEnv):
         return self._request(self._requester.delete, path, data or {})
 
 
-class Client(BaseClient):
+class BusinessClient(BaseClient):
     live = False
     _accounts = None
     _counterparties = None
@@ -626,3 +626,13 @@ class Order(_UpdateFromKwargsMixin):
             else ""
         )
         self.currency = self.order_amount["currency"] if self.order_amount else ""
+
+
+def Client(*args, **kwargs):
+    import warnings
+
+    warnings.warn(
+        "revolut.Client() is deprecated and will be gone in >0.9.x; please change to revolut.BusinessClient() instead",
+        DeprecationWarning,
+    )
+    return BusinessClient(*args, **kwargs)
