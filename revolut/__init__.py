@@ -55,6 +55,16 @@ class BaseClient(utils._SetEnv):
                     raise exceptions.MissingFields(message)
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
+            if rsp.status_code == 403:
+                raise exceptions.Forbidden(rsp.status_code, message)
+            if rsp.status_code == 404:
+                raise exceptions.NotFound(rsp.status_codde, message)
+            if rsp.status_code == 405:
+                raise exceptions.MethodNotAllowed(rsp.status_code, message)
+            if rsp.status_code == 406:
+                raise exceptions.NotAccaptable(rsp.status_code, message)
+            if rsp.status_code == 409:
+                raise exceptions.RequestConflict(rsp.status_code, message)
             if rsp.status_code == 422:
                 if "nsufficient balance" in message:
                     raise exceptions.InsufficientBalance(message)
@@ -62,6 +72,12 @@ class BaseClient(utils._SetEnv):
                     raise exceptions.CounterpartyAddressRequired(message)
                 elif "ounterparty already exists" in message:
                     raise exceptions.CounterpartyAlreadyExists(message)
+            if rsp.status_code == 429:
+                raise exceptions.TooManyRequests(rsp.status_code, message)
+            if rsp.status_code == 500:
+                raise exceptions.InternalServerError(rsp.status_code, message)
+            if rsp.status_code == 503:
+                raise exceptions.ServiceUnavailable(rsp.status_code, message)
             raise exceptions.RevolutHttpError(rsp.status_code, message)
         if result:
             _ppresult = json.dumps(
