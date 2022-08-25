@@ -596,11 +596,13 @@ class Order(_UpdateFromKwargsMixin):
     metadata: str = ""
     customer_id:str = ""
     email:str = ""
+    phone:str = ""
     completed_at: str = ""
     refunded_amount: str = ""
     payments: str = ""
 
     def __init__(self, **kwargs):
+        kwargs.pop("payments")
         self.client = kwargs.pop("client")
         self._update(**kwargs)
 
