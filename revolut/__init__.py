@@ -602,7 +602,6 @@ class Order(_UpdateFromKwargsMixin):
     payments: str = ""
 
     def __init__(self, **kwargs):
-        kwargs.pop("payments")
         self.client = kwargs.pop("client")
         self._update(**kwargs)
 
