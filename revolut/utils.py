@@ -3,17 +3,6 @@ import dateutil.parser
 from decimal import Decimal
 import json
 import jwt
-import sys
-
-if sys.version_info < (3,):  # pragma: nocover
-    _integer_types = (
-        int,
-        long,
-    )
-    _str_types = (str, bytes, unicode)
-else:  # pragma: nocover
-    _integer_types = (int,)
-    _str_types = (str, bytes)
 
 
 def _obj2id(obj):

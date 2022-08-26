@@ -137,7 +137,7 @@ class Account(utils._UpdateFromKwargsMixin):
 
     def send(self, dest, amount, currency, request_id, reference=None):
         amount = Decimal(amount)
-        if not isinstance(request_id, utils._str_types) or len(request_id) > 40:
+        if not isinstance(request_id, (str, bytes)) or len(request_id) > 40:
             raise ValueError("request_id must be a string of max. 40 chars")
         destid = str(utils._obj2id(dest))
         if (
