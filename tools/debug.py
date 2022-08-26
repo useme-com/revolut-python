@@ -6,8 +6,15 @@ from revolut.session import TemporarySession, RenewableSession, TokenProvider
 
 
 class Config(object):
-    stored_keys = ("client_id", "jwt", "refresh_token", "access_token", "auth_code",
-            "merchant_key", "merchant_sandbox")
+    stored_keys = (
+        "client_id",
+        "jwt",
+        "refresh_token",
+        "access_token",
+        "auth_code",
+        "merchant_key",
+        "merchant_sandbox",
+    )
     default_config_file = os.path.join(os.path.expanduser("~"), ".revolut-python.json")
     config_info = (
         "Config requires "
@@ -72,7 +79,10 @@ class Config(object):
             "-m", dest="merchant_key", nargs="?", help="Merchant secret key"
         )
         self.parser.add_argument(
-            "-s", dest="merchant_sandbox", action="store_true", help="Use Merchant in sandbox"
+            "-s",
+            dest="merchant_sandbox",
+            action="store_true",
+            help="Use Merchant in sandbox",
         )
         self.parser.add_argument(
             "-w",
@@ -125,7 +135,7 @@ class Config(object):
             return TemporarySession(self.data["access_token"])
         else:
             raise ValueError(
-                "Not enough data to construct Revolut session.\n"
+                "Not enough data to construct Revolut Business API session.\n"
                 "{:s}\n"
                 "Current keys are: ({:s})".format(
                     self.config_info, ", ".join(self.data.keys())
@@ -134,16 +144,20 @@ class Config(object):
 
     def get_merchant_client(self):
         if "merchant_key" in self.data:
-            return MerchantClient(self.data["merchant_key"],
-                    sandbox=self.data.get("merchant_sandbox", False))
+            return MerchantClient(
+                self.data["merchant_key"],
+                sandbox=self.data.get("merchant_sandbox", False),
+            )
         raise ValueError(
-                "Merchant key is missing, cannot construct the client.")
+            "Merchant key is missing, cannot construct the Revolut Merchant API client."
+        )
 
 
 if __name__ == "__main__":
     import ipdb
     import sys
-    from revolut import BusinessClient, MerchantClient
+    from revolut.business import BusinessClient
+    from revolut.merchant import MerchantClient
 
     conf = Config()
     conf.load_config()
