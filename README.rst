@@ -12,7 +12,20 @@ Revolut API client for Python
 
 A Python wrapper for Revolut API, Python 3.x compatible.
 
-Release 0.9, a working beta
+Latest release
+--------------
+
+Release 0.9, a working beta.
+
+Notes:
+
+* added ``revolut.merchant`` and ``MerchantClient`` within, which supports very basic Merchant API
+  functionality (creating and retrieving simple orders)
+* the ``revolut.Client`` class has been renamed to ``revolut.business.BusinessClient``; the old
+  import will remain valid in ``0.9.x``, however it will issue warning and the resulting object
+  will fail on type checks, like ``isinstance``
+* moved other classes like ``Client``, ``Transaction``, etc. to the ``revolut.business`` submodule;
+  top level import is deprecated, like above.
 
 What is supported?
 ------------------
