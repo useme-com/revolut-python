@@ -83,6 +83,7 @@ class Order(utils._UpdateFromKwargsMixin):
     metadata: str = ""
     customer_id: str = ""
     email: str = ""
+    phone: str = ""
     completed_at: Optional[datetime] = None
     refunded_amount: str = ""
     payments: str = ""
