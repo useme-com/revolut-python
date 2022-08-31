@@ -1,32 +1,21 @@
 from datetime import datetime, date
 from decimal import Decimal
-import inspect
-import json
 import operator
-import os
 import responses
 from unittest import TestCase
 
-from revolut import (
-    Client,
+from revolut import exceptions, utils
+from revolut.business import (
+    BusinessClient,
     Account,
     Counterparty,
     ExternalCounterparty,
     CounterpartyAccount,
     Transaction,
-    exceptions,
-    utils,
 )
 from revolut.session import TemporarySession, RenewableSession, TokenProvider
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-
-
-class JSONResponsesMixin(object):
-    def _read(self, name):
-        caller_name = inspect.getouterframes(inspect.currentframe(), 2)[1][3]
-        with open(os.path.join(DATA_DIR, caller_name, name), "r") as fh:
-            return json.loads(fh.read())
+from . import JSONResponsesMixin
 
 
 class TestTokens(TestCase, JSONResponsesMixin):
@@ -65,15 +54,15 @@ class TestTokens(TestCase, JSONResponsesMixin):
         self.assertIn("grant_type=refresh_token", responses.calls[0].request.body)
 
 
-class TestRevolut(TestCase, JSONResponsesMixin):
+class TestRevolutBusiness(TestCase, JSONResponsesMixin):
     access_token = "oa_sand_lI35rv-tpvl0qsKa5OJGW5yiiXtKg7uZYB6b0jmLSCk"
 
     def test_key(self):
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         self.assertFalse(cli.live)
         pssn = TemporarySession("oa_prod_mx4sDGo356ZndtVsOq16SBrilRuQc8DkSIS84ioMlfx")
-        cli = Client(pssn)
+        cli = BusinessClient(pssn)
         self.assertTrue(cli.live)
 
     @responses.activate
@@ -86,7 +75,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         self.assertRaises(exceptions.RevolutHttpError, cli._get, "whatever")
 
     @responses.activate
@@ -106,7 +95,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         accounts = cli.accounts
         self.assertEqual(6, len(accounts))
         self.assertIs(accounts, cli.accounts)
@@ -136,7 +125,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         counterparties = cli.counterparties
         self.assertEqual(2, len(counterparties))
         self.assertIs(counterparties, cli.counterparties)
@@ -158,7 +147,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             status=200,
         )
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         counterparties = list(
             sorted(cli.counterparties.items(), key=operator.itemgetter(0))
         )
@@ -170,10 +159,14 @@ class TestRevolut(TestCase, JSONResponsesMixin):
                 ),
                 status=204,
             )
+        # NOTE: We don't have to mock another /counterparties response because the
+        # BusinessClient._counterparties property is being maintained without hitting the
+        # API endpoints.
         for cptid, cpt in counterparties:
             cpt.delete()
             self.assertIsNone(cpt.id)
             self.assertRaises(ValueError, cpt.delete)
+            # The original mocked response would return an error here (excess counterparty)
             self.assertNotIn(cptid, cli.counterparties)
 
     @responses.activate
@@ -211,7 +204,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         cpt = Counterparty(
             client=cli,
             profile_type="personal",
@@ -275,7 +268,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         cpt = Counterparty(
             client=cli, profile_type="business", email="test@sandboxcorp.com"
         )
@@ -327,10 +320,10 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         cpt = ExternalCounterparty(
             client=cli,
-            company_name=u"Kogucik S.A.",
+            company_name="Kogucik S.A.",
             bank_country="PL",
             currency="PLN",
             phone="+48123456789",
@@ -351,7 +344,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         self.assertEqual(cpt.id, cpt_id)
         self.assertIsInstance(ncpt, Counterparty)
         self.assertEqual(repr(ncpt), "<Counterparty {}>".format(cpt_id))
-        self.assertEqual(ncpt.profile_type, "")
+        self.assertIsNone(ncpt.profile_type)
         self.assertEqual(
             str(ncpt), "Id: d7d28bee-d895-4e14-a212-813babffdd8f  Kogucik S.A."
         )
@@ -363,7 +356,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
 
     def test_add_counterparty_invalid(self):
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         cpt = Counterparty(client=cli, profile_type="whatever")
         self.assertRaises(ValueError, cpt.save)
 
@@ -396,7 +389,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         tx = cli.accounts["be8932d2-bf0d-4311-808f-fe9439d592df"].send(
             "c4ff8afa-54bb-4b2e-acb7-d0a95fb3b996",
             100,
@@ -442,7 +435,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         tx = cli.accounts["be8932d2-bf0d-4311-808f-fe9439d592df"].send(
             "2d689cbd-1dc5-4e1b-a1bb-bc2b17c75a6c",
             1,
@@ -493,7 +486,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
         )
 
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         tx = cli.accounts["be8932d2-bf0d-4311-808f-fe9439d592df"].send(
             "ed50b331-5b2c-42e4-afbe-0e883bc12e60",
             100,
@@ -538,7 +531,7 @@ class TestRevolut(TestCase, JSONResponsesMixin):
             status=200,
         )
         tssn = TemporarySession(self.access_token)
-        cli = Client(tssn)
+        cli = BusinessClient(tssn)
         cpt = cli.counterparties[cpt_id]
         cli.accounts["6ed7aa7c-64d6-4e6f-a52c-6f480a4c94b8"].send(
             cpt.id,

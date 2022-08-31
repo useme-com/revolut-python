@@ -6,14 +6,25 @@ from revolut.session import TemporarySession, RenewableSession, TokenProvider
 
 
 class Config(object):
-    stored_keys = ("client_id", "jwt", "refresh_token", "access_token", "auth_code")
+    stored_keys = (
+        "client_id",
+        "jwt",
+        "refresh_token",
+        "access_token",
+        "auth_code",
+        "merchant_key",
+        "merchant_sandbox",
+    )
     default_config_file = os.path.join(os.path.expanduser("~"), ".revolut-python.json")
     config_info = (
         "Config requires "
         "one of the following key combinations: "
+        "(client_id, jwt, refresh_token, merchant_key),"
+        "(client_id, jwt, auth_code, merchant_key), "
         "(client_id, jwt, refresh_token), "
         "(client_id, jwt, auth_code), "
-        "(access_token,)"
+        "(access_token,) "
+        "(merchant_key,) "
     )
 
     def __init__(self, config_file=None):
@@ -65,6 +76,15 @@ class Config(object):
             "-a", dest="access_token", nargs="?", help="Access token"
         )
         self.parser.add_argument(
+            "-m", dest="merchant_key", nargs="?", help="Merchant secret key"
+        )
+        self.parser.add_argument(
+            "-s",
+            dest="merchant_sandbox",
+            action="store_true",
+            help="Use Merchant in sandbox",
+        )
+        self.parser.add_argument(
             "-w",
             dest="write_config",
             action="store_true",
@@ -93,7 +113,7 @@ class Config(object):
         if self._cli_config.write_config:
             self.store_file_config()
 
-    def get_session(self):
+    def get_business_session(self):
         """Check what session class is available with current settings. Initialize it and
         return. Long-term sessions are preferred."""
         if set(("client_id", "jwt", "refresh_token")).issubset(self.data.keys()):
@@ -115,33 +135,53 @@ class Config(object):
             return TemporarySession(self.data["access_token"])
         else:
             raise ValueError(
-                "Not enough data to construct Revolut session.\n"
+                "Not enough data to construct Revolut Business API session.\n"
                 "{:s}\n"
                 "Current keys are: ({:s})".format(
                     self.config_info, ", ".join(self.data.keys())
                 )
             )
 
+    def get_merchant_client(self):
+        if "merchant_key" in self.data:
+            return MerchantClient(
+                self.data["merchant_key"],
+                sandbox=self.data.get("merchant_sandbox", False),
+            )
+        raise ValueError(
+            "Merchant key is missing, cannot construct the Revolut Merchant API client."
+        )
+
 
 if __name__ == "__main__":
     import ipdb
     import sys
-    from revolut import Client
+    from revolut.business import BusinessClient
+    from revolut.merchant import MerchantClient
 
     conf = Config()
     conf.load_config()
     try:
-        session = conf.get_session()
+        session = conf.get_business_session()
+        bcli = BusinessClient(session)
     except ValueError as e:
+        bcli = None
         print(str(e), file=sys.stderr)
+    try:
+        mcli = conf.get_merchant_client()
+    except ValueError as e:
+        mcli = None
+        print(str(e), file=sys.stderr)
+    if not bcli and not mcli:
         conf.parser.print_usage(file=sys.stderr)
         sys.exit(1)
     conf.write_config_if_needed()
-    cli = Client(session)
     print("-" * 50)
-    print(
-        "Now you should have an authorized revolut.Client instance under the `cli` variable."
-    )
+    print("Now you should have:")
+    if bcli is not None:
+        print("  * an authorized `BusinessClient` instance under the `bcli` variable")
+    if mcli is not None:
+        print("  * a `MerchantClient` instance under the `mcli` variable")
     print("-" * 50)
 
     ipdb.set_trace()

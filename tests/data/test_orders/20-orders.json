@@ -1,0 +1,38 @@
+[
+  {
+    "capture_mode": "AUTOMATIC",
+    "created_at": "2022-08-25T14:43:13.630804Z",
+    "id": "0f1e2ffc-6cd4-45be-8fb6-da3705cf321f",
+    "merchant_order_ext_ref": "a test order in PLN",
+    "metadata": {},
+    "order_amount": {
+      "currency": "PLN",
+      "value": 1234
+    },
+    "order_outstanding_amount": {
+      "currency": "PLN",
+      "value": 1234
+    },
+    "state": "PENDING",
+    "type": "PAYMENT",
+    "updated_at": "2022-08-25T14:43:13.630804Z"
+  },
+  {
+    "capture_mode": "AUTOMATIC",
+    "created_at": "2022-08-25T14:39:20.105464Z",
+    "id": "b2a4b610-fe73-4aa2-92f1-b984ccf237c0",
+    "merchant_order_ext_ref": "a-test-order",
+    "metadata": {},
+    "order_amount": {
+      "currency": "PLN",
+      "value": 1000
+    },
+    "order_outstanding_amount": {
+      "currency": "PLN",
+      "value": 1000
+    },
+    "state": "PENDING",
+    "type": "PAYMENT",
+    "updated_at": "2022-08-25T14:39:20.105464Z"
+  }
+]
