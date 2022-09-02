@@ -28,6 +28,7 @@ class Order(utils._UpdateFromKwargsMixin):
     completed_at: Optional[datetime] = None
     refunded_amount: str = ""
     payments: str = ""
+    checkout_url: str = ""
 
     def __init__(self, **kwargs):
         self.client = kwargs.pop("client")
