@@ -116,9 +116,13 @@ class MerchantClient(base.BaseClient):
         except Exception:
             return None
 
-    def update_order(self, order_id: str, amount: Union[Decimal, int], currency: str) -> Optional[Order]:
+    def update_order(
+        self, order_id: str, amount: Union[Decimal, int], currency: str
+    ) -> Optional[Order]:
         """
         Updates an order by new value of amount and/or currency.
+
+        **NOTE:** This will probably be replaced by Order.save() in future versions.
 
         **WARNING:** The amount of the order has to be specified in regular currency units, even
         though Revolut uses integer denomination of 1/100th of the unit.
