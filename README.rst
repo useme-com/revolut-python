@@ -17,15 +17,24 @@ Latest release
 
 Release 0.10, a working beta.
 
-Notes:
+Notes for 0.10.x
+^^^^^^^^^^^^^^^^
 
-* added ``revolut.merchant`` and ``MerchantClient`` within, which supports very basic Merchant API
-  functionality (creating and retrieving simple orders)
-* the ``revolut.Client`` class has been renamed to ``revolut.business.BusinessClient``; the old
-  import will remain valid in ``0.9.x``, however it will issue warning and the resulting object
-  will fail on type checks, like ``isinstance``
-* moved other classes like ``Client``, ``Transaction``, etc. to the ``revolut.business`` submodule;
-  top level import is deprecated, like above.
+    * dropped top-level classes in favor of ``business`` and ``merchant`` submodules
+    * ``MerchantClient`` throws exceptions on failures
+    * dropped ``MerchantClient.update_order``
+
+
+Notes for 0.9.x
+^^^^^^^^^^^^^^^
+
+    * added ``revolut.merchant`` and ``MerchantClient`` within, which supports very basic Merchant
+      API functionality (creating and retrieving simple orders)
+    * the ``revolut.Client`` class has been renamed to ``revolut.business.BusinessClient``; the old
+      import will remain valid in ``0.9.x``, however it will issue warning and the resulting object
+      will fail on type checks, like ``isinstance``
+    * moved other classes like ``Client``, ``Transaction``, etc. to the ``revolut.business``
+      submodule; top level import is deprecated, like above.
 
 What is supported?
 ------------------
