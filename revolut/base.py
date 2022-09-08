@@ -85,11 +85,6 @@ class BaseClient:
         return self._request(self._requester.post, path, data or {})
 
     def _patch(self, path, data=None):
-        path = (
-            "{}?{}".format(path, urlencode(data, safe=":"))
-            if data is not None
-            else path
-        )
         return self._request(self._requester.patch, path, data or {})
 
     def _delete(self, path, data=None):

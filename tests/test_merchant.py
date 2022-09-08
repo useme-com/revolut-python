@@ -31,6 +31,15 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         self.assertIsInstance(order.created_at, datetime)
         self.assertIsInstance(order.updated_at, datetime)
 
+        # test getter and setter
+        order.value = Decimal("88.99")
+        self.assertEqual(order.value, Decimal("88.99"))
+        self.assertEqual(order.order_amount["value"], 8899)
+
+        self.assertEqual(order.outstanding_value, Decimal("12.34"))
+        self.assertIsNone(order.refunded_value)
+        # end test getter and setter
+
         responses.add(
             responses.GET,
             "https://sandbox-merchant.revolut.com/api/1.0/orders",
@@ -48,6 +57,7 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
             json=self._read("30-order.json"),
             status=200,
         )
+        order = cli.get_order(ORDER_ID)
         self.assertEqual(order.value, Decimal("12.34"))
         self.assertDictEqual(order.order_amount, {"value": 1234, "currency": "PLN"})
         self.assertEqual(order.id, ORDER_ID)

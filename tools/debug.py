@@ -1,7 +1,11 @@
 import argparse
+import ipdb
 import json
 import logging
 import os
+import sys
+from revolut.business import BusinessClient
+from revolut.merchant import MerchantClient
 from revolut.session import TemporarySession, RenewableSession, TokenProvider
 
 
@@ -153,35 +157,45 @@ class Config(object):
         )
 
 
+class RevolutSession:
+    bcli = None
+    mcli = None
+
+    def __init__(self):
+        conf = Config()
+        conf.load_config()
+        try:
+            session = conf.get_business_session()
+            self.bcli = BusinessClient(session)
+        except ValueError as e:
+            print(str(e), file=sys.stderr)
+        try:
+            self.mcli = conf.get_merchant_client()
+        except ValueError as e:
+            self.mcli = None
+            print(str(e), file=sys.stderr)
+        if not self.bcli and not self.mcli:
+            conf.parser.print_usage(file=sys.stderr)
+            sys.exit(1)
+        conf.write_config_if_needed()
+        self.prepare()
+
+    def prepare(self):
+        pass
+
+    def start_session(self):
+        print("-" * 50)
+        print("Now you should have:")
+        if self.bcli is not None:
+            print(
+                "  * an authorized `BusinessClient` instance under the `bcli` variable"
+            )
+        if self.mcli is not None:
+            print("  * a `MerchantClient` instance under the `mcli` variable")
+        print("-" * 50)
+
+        ipdb.set_trace()
+
+
 if __name__ == "__main__":
-    import ipdb
-    import sys
-    from revolut.business import BusinessClient
-    from revolut.merchant import MerchantClient
-
-    conf = Config()
-    conf.load_config()
-    try:
-        session = conf.get_business_session()
-        bcli = BusinessClient(session)
-    except ValueError as e:
-        bcli = None
-        print(str(e), file=sys.stderr)
-    try:
-        mcli = conf.get_merchant_client()
-    except ValueError as e:
-        mcli = None
-        print(str(e), file=sys.stderr)
-    if not bcli and not mcli:
-        conf.parser.print_usage(file=sys.stderr)
-        sys.exit(1)
-    conf.write_config_if_needed()
-    print("-" * 50)
-    print("Now you should have:")
-    if bcli is not None:
-        print("  * an authorized `BusinessClient` instance under the `bcli` variable")
-    if mcli is not None:
-        print("  * a `MerchantClient` instance under the `mcli` variable")
-    print("-" * 50)
-
-    ipdb.set_trace()
+    RevolutSession().start_session()

@@ -17,17 +17,19 @@ class Order(utils._UpdateFromKwargsMixin):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     capture_mode: str = ""
-    value = Decimal(0)
     currency: str = ""
-    order_amount: str = ""
-    order_outstanding_amount: str = ""
+    order_amount: Optional[dict] = None
+    order_outstanding_amount: Optional[dict] = None
+    refunded_amount: Optional[dict] = None
+    description: Optional[str] = None
     metadata: str = ""
-    customer_id: str = ""
-    email: str = ""
+    customer_id: Optional[str] = None
+    email: Optional[str] = None
     phone: str = ""
     completed_at: Optional[datetime] = None
-    refunded_amount: str = ""
-    payments: str = ""
+    payments: Optional[list] = None
+    related: Optional[list] = None
+    shipping_address: Optional[dict] = None
     checkout_url: str = ""
 
     def __init__(self, **kwargs):
@@ -48,12 +50,58 @@ class Order(utils._UpdateFromKwargsMixin):
         self.completed_at = (
             dateutil.parser.parse(self.completed_at) if self.completed_at else ""
         )
-        self.value = (
-            utils._integertomoney(self.order_amount["value"])
-            if self.order_amount
-            else ""
-        )
         self.currency = self.order_amount["currency"] if self.order_amount else ""
+        self.shipping_address = kwargs.get("shipping_address", {})
+
+    @property
+    def value(self) -> Optional[Decimal]:
+        """
+        Returns the value of the order taken from ``self.order_amount["value"]``
+        and converted to ``Decimal``.
+        """
+        if self.order_amount.get("value") is None:
+            return None
+        return utils._integertomoney(self.order_amount["value"])
+
+    @value.setter
+    def value(self, val: Decimal):
+        """
+        Sets proper ``self.order_amount["value"]`` from given ``Decimal``.
+        """
+        self.order_amount["value"] = utils._moneytointeger(val)
+
+    @property
+    def outstanding_value(self) -> Optional[Decimal]:
+        if (
+            not self.order_outstanding_amount
+            or self.order_outstanding_amount.get("value") is None
+        ):
+            return None
+        return utils._integertomoney(self.order_outstanding_amount["value"])
+
+    @property
+    def refunded_value(self) -> Optional[Decimal]:
+        if not self.refunded_amount or self.refunded_amount.get("value") is None:
+            return None
+        return utils._integertomoney(self.refunded_amount["value"])
+
+    def save(self) -> None:
+        data = {}
+        for k in (
+            "merchant_order_ext_ref",
+            "description",
+            "email",
+            "customer_id",
+            "capture_mode",
+            "shipping_address",
+        ):
+            v = getattr(self, k)
+            if v is not None and v != {}:
+                data[k] = v
+        data["amount"] = self.order_amount["value"]
+        data["currency"] = self.order_amount["currency"]
+        respdata = self.client._patch(f"orders/{self.id}", data)
+        self._update(**respdata)
 
 
 class MerchantClient(base.BaseClient):
@@ -106,38 +154,12 @@ class MerchantClient(base.BaseClient):
         )
         return Order(client=self, **data)
 
-    def get_order(self, order_id: str) -> Optional[Order]:
+    def get_order(self, order_id: str) -> Order:
         """
         Retrieves ``Order`` with the given ID.
         """
-        try:
-            data = self._get(f"orders/{order_id}")
-            return Order(client=self, **data)
-        except Exception:
-            return None
-
-    def update_order(
-        self, order_id: str, amount: Union[Decimal, int], currency: str
-    ) -> Optional[Order]:
-        """
-        Updates an order by new value of amount and/or currency.
-
-        **NOTE:** This will probably be replaced by Order.save() in future versions.
-
-        **WARNING:** The amount of the order has to be specified in regular currency units, even
-        though Revolut uses integer denomination of 1/100th of the unit.
-        """
-        reqdata = {}
-        if amount:
-            amount = utils._moneytointeger(amount)
-            reqdata["amount"] = amount
-        if currency:
-            reqdata["currency"] = currency
-        try:
-            data = self._patch(path=f"orders/{order_id}", data=reqdata)
-            return Order(client=self, **data)
-        except Exception:
-            return None
+        data = self._get(f"orders/{order_id}")
+        return Order(client=self, **data)
 
     def orders(
         self,
