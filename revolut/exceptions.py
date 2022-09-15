@@ -8,6 +8,12 @@ class RevolutHttpError(RevolutError):
         super(RevolutHttpError, self).__init__(message)
 
 
+class BadRequest(RevolutHttpError):
+    """Usually a HTTP/400 Bad Request."""
+
+    pass
+
+
 class Unauthorized(RevolutHttpError):
     """Usually a HTTP 401/Unauthorized."""
 
@@ -99,6 +105,10 @@ class InsufficientBalance(TransactionError):
 
 
 class NoPocketFound(TransactionError):
+    pass
+
+
+class BeneficiaryUnsupported(TransactionError):
     pass
 
 

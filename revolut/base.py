@@ -31,7 +31,7 @@ class BaseClient:
         if rsp.status_code < 200 or rsp.status_code >= 300:
             message = getattr(result, "message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
-            if rsp.status_code == 400:
+            if rsp.status_code in (400, 422):
                 if "o pocket found" in message:
                     raise exceptions.NoPocketFound(message)
                 if "BIC and IBAN does not match" in message:
@@ -40,6 +40,15 @@ class BaseClient:
                     raise exceptions.InvalidPhoneNumber(message)
                 if "equired fields are:" in message:
                     raise exceptions.MissingFields(message)
+                if "nsufficient balance" in message:
+                    raise exceptions.InsufficientBalance(message)
+                if "ddress is required" in message:
+                    raise exceptions.CounterpartyAddressRequired(message)
+                if "ounterparty already exists" in message:
+                    raise exceptions.CounterpartyAlreadyExists(message)
+                if "we no longer support this beneficiary" in message:
+                    raise exceptions.BeneficiaryUnsupported(message)
+                raise exceptions.BadRequest(rsp.status_code, message)
             if rsp.status_code == 401:
                 raise exceptions.Unauthorized(rsp.status_code, message)
             if rsp.status_code == 403:
@@ -52,13 +61,6 @@ class BaseClient:
                 raise exceptions.NotAccaptable(rsp.status_code, message)
             if rsp.status_code == 409:
                 raise exceptions.RequestConflict(rsp.status_code, message)
-            if rsp.status_code == 422:
-                if "nsufficient balance" in message:
-                    raise exceptions.InsufficientBalance(message)
-                elif "ddress is required" in message:
-                    raise exceptions.CounterpartyAddressRequired(message)
-                elif "ounterparty already exists" in message:
-                    raise exceptions.CounterpartyAlreadyExists(message)
             if rsp.status_code == 429:
                 raise exceptions.TooManyRequests(rsp.status_code, message)
             if rsp.status_code == 500:
