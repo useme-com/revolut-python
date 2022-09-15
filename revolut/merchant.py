@@ -50,8 +50,21 @@ class Order(utils._UpdateFromKwargsMixin):
         self.completed_at = (
             dateutil.parser.parse(self.completed_at) if self.completed_at else ""
         )
-        self.currency = self.order_amount["currency"] if self.order_amount else ""
         self.shipping_address = kwargs.get("shipping_address", {})
+
+    @property
+    def currency(self) -> Optional[str]:
+        """
+        Returns the currency taken from ``self.order_amount["currency"]``.
+        """
+        return self.order_amount.get("currency", None)
+
+    @currency.setter
+    def currency(self, currency: str):
+        """
+        Sets the currency into ``self.order_amount["currency"]``.
+        """
+        self.order_amount["currency"] = currency
 
     @property
     def value(self) -> Optional[Decimal]:
@@ -89,6 +102,7 @@ class Order(utils._UpdateFromKwargsMixin):
         data = {}
         for k in (
             "merchant_order_ext_ref",
+            "currency",
             "description",
             "email",
             "customer_id",
@@ -99,7 +113,6 @@ class Order(utils._UpdateFromKwargsMixin):
             if v is not None and v != {}:
                 data[k] = v
         data["amount"] = self.order_amount["value"]
-        data["currency"] = self.order_amount["currency"]
         respdata = self.client._patch(f"orders/{self.id}", data)
         self._update(**respdata)
 

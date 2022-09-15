@@ -46,6 +46,9 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         order.value = Decimal("88.99")
         self.assertEqual(order.value, Decimal("88.99"))
         self.assertEqual(order.order_amount["value"], 8899)
+        order.currency = "EUR"
+        self.assertEqual(order.currency, "EUR")
+        self.assertEqual(order.order_amount["currency"], "EUR")
 
         self.assertEqual(order.outstanding_value, Decimal("12.34"))
         self.assertIsNone(order.refunded_value)
