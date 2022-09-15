@@ -190,8 +190,10 @@ class RevolutSession:
             print(
                 "  * an authorized `BusinessClient` instance under the `bcli` variable"
             )
+            bcli = self.bcli
         if self.mcli is not None:
             print("  * a `MerchantClient` instance under the `mcli` variable")
+            mcli = self.mcli
         print("-" * 50)
 
         ipdb.set_trace()
