@@ -18,8 +18,7 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
     def test_orders(self):
         ORDER_ID = "0f1e2ffc-6cd4-45be-8fb6-da3705cf321f"
         ORDER_REFERENCE = "a test order in PLN"
-        responses.add(
-            responses.POST,
+        rsp10 = responses.post(
             "https://sandbox-merchant.revolut.com/api/1.0/orders",
             json=self._read("10-create_order.json"),
             status=200,
@@ -41,6 +40,7 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         self.assertEqual(order.id, ORDER_ID)
         self.assertIsInstance(order.created_at, datetime)
         self.assertIsInstance(order.updated_at, datetime)
+        self.assertEqual(rsp10.call_count, 1)
 
         # test getter and setter
         order.value = Decimal("88.99")
@@ -54,8 +54,7 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         self.assertIsNone(order.refunded_value)
         # end test getter and setter
 
-        responses.add(
-            responses.GET,
+        rsp20 = responses.get(
             "https://sandbox-merchant.revolut.com/api/1.0/orders",
             json=self._read("20-orders.json"),
             status=200,
@@ -65,9 +64,9 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         self.assertEqual(len(orders), 2)
         self.assertIsInstance(orders[0], Order)
         self.assertIsInstance(orders[1], Order)
+        self.assertEqual(rsp20.call_count, 1)
 
-        responses.add(
-            responses.GET,
+        rsp30 = responses.get(
             f"https://sandbox-merchant.revolut.com/api/1.0/orders/{ORDER_ID}",
             json=self._read("30-order.json"),
             status=200,
@@ -79,3 +78,47 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         self.assertEqual(order.id, ORDER_ID)
         self.assertIsInstance(order.created_at, datetime)
         self.assertIsInstance(order.updated_at, datetime)
+        self.assertEqual(rsp30.call_count, 1)
+
+    @responses.activate
+    def test_order_update(self):
+        ORDER_ID = "0f1e2ffc-6cd4-45be-8fb6-da3705cf321f"
+        cli = MerchantClient(self.merchant_key, sandbox=True)
+
+        rsp10 = responses.get(
+            f"https://sandbox-merchant.revolut.com/api/1.0/orders/{ORDER_ID}",
+            json=self._read("10-get_order.json"),
+            status=200,
+            match=[
+                responses.matchers.query_string_matcher(""),
+                responses.matchers.json_params_matcher(None),
+            ],
+        )
+        order = cli.get_order(ORDER_ID)
+        self.assertEqual(order.id, ORDER_ID)
+        self.assertEqual(order.value, Decimal("12.34"))
+        self.assertEqual(order.currency, "PLN")
+        self.assertEqual(rsp10.call_count, 1)
+
+        order.value = Decimal("3.12")
+        order.currency = "EUR"
+        rsp20 = responses.patch(
+            f"https://sandbox-merchant.revolut.com/api/1.0/orders/{ORDER_ID}",
+            json=self._read("20-order_save.json"),
+            status=200,
+            match=[
+                responses.matchers.query_string_matcher(""),
+                responses.matchers.json_params_matcher(
+                    {
+                        "amount": 312,
+                        "capture_mode": order.capture_mode,
+                        "currency": "EUR",
+                        "merchant_order_ext_ref": order.merchant_order_ext_ref,
+                    }
+                ),
+            ],
+        )
+        order.save()
+        self.assertEqual(order.value, Decimal("3.12"))
+        self.assertEqual(order.currency, "EUR")
+        self.assertEqual(rsp20.call_count, 1)

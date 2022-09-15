@@ -1,0 +1,20 @@
+{
+  "capture_mode": "AUTOMATIC",
+  "checkout_url": "https://sandbox-business.revolut.com/payment-link/ku8ucc896lFeXLVX-QhP8A",
+  "created_at": "2022-08-25T14:43:13.630804Z",
+  "id": "0f1e2ffc-6cd4-45be-8fb6-da3705cf321f",
+  "merchant_order_ext_ref": "a test order in PLN",
+  "metadata": {},
+  "order_amount": {
+    "currency": "EUR",
+    "value": 312
+  },
+  "order_outstanding_amount": {
+    "currency": "EUR",
+    "value": 312
+  },
+  "public_id": "5e5cb557-f908-4ff0-92ef-2e71cf3dea51",
+  "state": "PENDING",
+  "type": "PAYMENT",
+  "updated_at": "2022-08-25T14:43:13.630804Z"
+}
