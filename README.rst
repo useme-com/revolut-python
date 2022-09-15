@@ -15,7 +15,7 @@ A Python wrapper for Revolut API, Python 3.x compatible.
 Latest release
 --------------
 
-Release 0.10, a working beta.
+Release 0.10.1, a working beta.
 
 Notes for 0.10.x
 ^^^^^^^^^^^^^^^^
