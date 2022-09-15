@@ -138,7 +138,7 @@ class MerchantClient(base.BaseClient):
         if sandbox:
             self.base_url = "https://sandbox-merchant.revolut.com/api/1.0/"
         else:
-            self.base_url = "https://merchant.revolut.com/api/1.0/"
+            self.base_url = "https://merchant.revolut.com/api/1.0/"  # pragma: nocover
         self.merchant_key = merchant_key
         self.timeout = timeout
         self._requester = requests.Session()

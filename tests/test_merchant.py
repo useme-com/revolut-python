@@ -58,7 +58,10 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
             "https://sandbox-merchant.revolut.com/api/1.0/orders",
             json=self._read("20-orders.json"),
             status=200,
-            match=[responses.matchers.query_string_matcher("")],
+            match=[
+                responses.matchers.query_string_matcher(""),
+                responses.matchers.json_params_matcher(None),
+            ],
         )
         orders = cli.orders()
         self.assertEqual(len(orders), 2)
@@ -70,7 +73,10 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
             f"https://sandbox-merchant.revolut.com/api/1.0/orders/{ORDER_ID}",
             json=self._read("30-order.json"),
             status=200,
-            match=[responses.matchers.query_string_matcher("")],
+            match=[
+                responses.matchers.query_string_matcher(""),
+                responses.matchers.json_params_matcher(None),
+            ],
         )
         order = cli.get_order(ORDER_ID)
         self.assertEqual(order.value, Decimal("12.34"))
@@ -79,6 +85,25 @@ class TestRevolutMerchant(TestCase, JSONResponsesMixin):
         self.assertIsInstance(order.created_at, datetime)
         self.assertIsInstance(order.updated_at, datetime)
         self.assertEqual(rsp30.call_count, 1)
+
+    @responses.activate
+    def test_orders_date_range(self):
+        cli = MerchantClient(self.merchant_key, sandbox=True)
+        rsp = responses.get(
+            "https://sandbox-merchant.revolut.com/api/1.0/orders",
+            json=[],
+            status=200,
+            match=[
+                responses.matchers.query_string_matcher(
+                    "from_created_date=2020-01-01T00:00:00.000000Z&to_created_date=2020-01-02T13:57:00.000000Z"
+                ),
+                responses.matchers.json_params_matcher(None),
+            ],
+        )
+        _ = cli.orders(
+            from_date=datetime(2020, 1, 1), to_date=datetime(2020, 1, 2, 13, 57)
+        )
+        self.assertEqual(rsp.call_count, 1)
 
     @responses.activate
     def test_order_update(self):
