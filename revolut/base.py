@@ -29,7 +29,7 @@ class BaseClient:
         if rsp.status_code != 204:
             result = rsp.json(parse_float=Decimal)
         if rsp.status_code < 200 or rsp.status_code >= 300:
-            message = getattr(result, "message", "No message supplied")
+            message = result.get("message", "No message supplied")
             _log.error("HTTP {} for {}: {}".format(rsp.status_code, url, message))
             if rsp.status_code in (400, 422):
                 if "o pocket found" in message:

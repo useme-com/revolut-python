@@ -53,7 +53,6 @@ class TestTokens(TestCase, JSONResponsesMixin):
         self.assertIsNotNone(sess.access_token)
         self.assertIn("grant_type=refresh_token", responses.calls[0].request.body)
 
-
 class TestRevolutBusiness(TestCase, JSONResponsesMixin):
     access_token = "oa_sand_lI35rv-tpvl0qsKa5OJGW5yiiXtKg7uZYB6b0jmLSCk"
 
@@ -67,16 +66,19 @@ class TestRevolutBusiness(TestCase, JSONResponsesMixin):
 
     @responses.activate
     def test_404(self):
+        message = "The requested resource not found"
         responses.add(
             responses.GET,
             "https://sandbox-b2b.revolut.com/api/1.0/whatever",
-            json={"message": "The requested resource not found"},
+            json={"message": message},
             status=404,
         )
 
         tssn = TemporarySession(self.access_token)
         cli = BusinessClient(tssn)
-        self.assertRaises(exceptions.RevolutHttpError, cli._get, "whatever")
+        with self.assertRaises(exceptions.RevolutHttpError) as cm:
+            cli._get("whatever")
+        self.assertEqual(str(cm.exception), message)
 
     @responses.activate
     def test_accounts(self):
