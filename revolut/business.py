@@ -50,7 +50,7 @@ class BusinessClient(base.BaseClient, utils._SetEnv):
         return self._counterparties
 
     def _refresh_counterparties(self):
-        self._counterparties = self._cptbyaccount = {}
+        self._counterparties = self._cptbyaccount = None
         _ = self.counterparties
 
     def transactions(
